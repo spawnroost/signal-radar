@@ -240,13 +240,16 @@ export function Landing({
           {BEATS.map((b, i) => (
             <li key={b.shot} className="beat">
               <div className="beat-text">
-                <p className="beat-no" aria-hidden="true">
-                  {String(i + 1).padStart(2, '0')}
-                  {b.pro && <PlanPill name="Pro" />}
-                </p>
                 <h3 className="beat-title">
                   {b.title}
-                  {b.pro && <span className="sr-only"> (Pro)</span>}
+                  {b.pro && (
+                    <>
+                      <span className="beat-pill" aria-hidden="true">
+                        <PlanPill name="Pro" />
+                      </span>
+                      <span className="sr-only"> (Pro)</span>
+                    </>
+                  )}
                 </h3>
                 <p className="beat-body">{b.body}</p>
               </div>

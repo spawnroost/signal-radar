@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { CloseIcon } from '../icons';
 import {
   countVisit,
@@ -17,9 +17,18 @@ export function InstallHint() {
   const [visits] = useState(countVisit);
   const [dismissed, setDismissed] = useState(installHintDismissed);
 
-  if (!shouldShowInstallHint({ visits, dismissed, installable: install !== null || ios })) {
-    return null;
-  }
+  const show = shouldShowInstallHint({ visits, dismissed, installable: install !== null || ios });
+
+  // The card floats, so the page keeps room under its last line for as long as it is up.
+  useEffect(() => {
+    if (!show) return;
+    document.documentElement.dataset.installHint = '';
+    return () => {
+      delete document.documentElement.dataset.installHint;
+    };
+  }, [show]);
+
+  if (!show) return null;
   const done = () => {
     dismissInstallHint();
     setDismissed(true);
