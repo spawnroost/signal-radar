@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'node:url';
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
-import { VitePWA } from 'vite-plugin-pwa';
+import { VitePWA, type ManifestOptions } from 'vite-plugin-pwa';
 import radarConfig from '../../radar.config';
 import { normalizeSiteUrl, prerenderPlugin, siteUrlPlugin } from './build/prerender';
 
@@ -30,6 +30,7 @@ export default defineConfig(({ mode }) => {
       VitePWA({
         registerType: 'autoUpdate',
         includeAssets: ['icons/mark.svg', 'icons/apple-touch-icon.png'],
+        // user_preferences is newer than the plugin's manifest type.
         manifest: {
           name: 'Signal Radar',
           short_name: 'Signal Radar',
@@ -45,6 +46,10 @@ export default defineConfig(({ mode }) => {
           display: 'standalone',
           background_color: '#f7f7f4',
           theme_color: '#f7f7f4',
+          // Installed app (bar, splash) follows the phone's dark mode where Chrome supports it.
+          user_preferences: {
+            color_scheme_dark: { background_color: '#1b1a16', theme_color: '#1b1a16' },
+          },
           icons: [
             { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
             { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
@@ -55,7 +60,7 @@ export default defineConfig(({ mode }) => {
               purpose: 'maskable',
             },
           ],
-        },
+        } as Partial<ManifestOptions>,
         workbox: {
           importScripts: ['push-sw.js'],
           globPatterns: ['**/*.{js,css,html,woff2,svg,png}'],

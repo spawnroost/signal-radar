@@ -2,7 +2,7 @@
    type scale 12/14/16/20/28 (plus 44/64 display sizes on the landing page).
    Each colour is declared once as light-dark(light, dark); color-scheme picks the side. */
 :root {
-  color-scheme: light; /* light by default; the toggle sets data-theme="dark" */
+  color-scheme: light dark; /* follows the phone; the toggle sets data-theme to pin one */
   --canvas: light-dark(#f7f7f4, #1b1a16);
   --surface: light-dark(#f2f1ed, #22211c);
   --raised: light-dark(#e6e5e0, #2c2b25);

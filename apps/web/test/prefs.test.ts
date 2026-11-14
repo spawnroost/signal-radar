@@ -129,7 +129,7 @@ describe('resolvePrefs', () => {
     expect(resolvePrefs(emptyPrefs(), defaults)).toEqual({
       niches: [],
       sources: defaults.sources,
-      theme: 'light',
+      theme: 'system',
       sourceKinds: [],
       needsTopics: true,
     });
