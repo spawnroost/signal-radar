@@ -65,10 +65,18 @@ describe('planBadge', () => {
   it('shows the end date of a pass', () => {
     const b = planBadge(me(sub({}), '2027-03-12T00:00:00Z'), NOW);
     expect(b).toMatchObject({ name: 'Pro', note: 'until 12 Mar 2027', open: false });
+    expect(b.daysLeft).toBe(123);
+    expect(b.until).toBe('2027-03-12T00:00:00Z');
   });
 
   it('shows plain Pro when there is no end date', () => {
-    expect(planBadge(me(sub({})), NOW)).toMatchObject({ name: 'Pro', note: '', open: true });
+    expect(planBadge(me(sub({})), NOW)).toMatchObject({
+      name: 'Pro',
+      note: '',
+      open: true,
+      daysLeft: null,
+      until: null,
+    });
   });
 
   it('shows Free for everyone else', () => {

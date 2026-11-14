@@ -12,9 +12,11 @@ export function TopicsPanel({ onDone, onSkip }: Props) {
   const [niches, setNiches] = useState<Niche[]>([]);
   return (
     <section className="topics-panel" aria-labelledby="topics-title">
-      <h2 id="topics-title" className="page-title">
-        What do you follow?
-      </h2>
+      <div className="page-head">
+        <h2 id="topics-title" className="page-title">
+          What do you follow?
+        </h2>
+      </div>
       <p className="lede">
         Pick a few topics and this page ranks the day&rsquo;s stories for them. Change them any time
         from Customize.

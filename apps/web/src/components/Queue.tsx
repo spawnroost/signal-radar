@@ -231,17 +231,20 @@ export function Queue({ isPro }: { isPro: boolean }) {
 
   return (
     <section aria-labelledby="queue-title">
-      <div className="page-head">
-        <h2 id="queue-title" className="page-title">
-          Your ideas
-        </h2>
-        <KeysHelp />
+      <div className="arcs-host">
+        <RadarArcs className="head-arcs" />
+        <div className="page-head">
+          <h2 id="queue-title" className="page-title">
+            Your ideas
+          </h2>
+          <KeysHelp />
+        </div>
+        <p className="lede queue-lede">
+          Stories picked for your topics after each run. Pick the ones worth making something about
+          and skip the rest, or save anything from Read, or paste a link below. Your picks and skips
+          shape what the next run suggests.
+        </p>
       </div>
-      <p className="lede queue-lede">
-        Stories picked for your topics after each run. Pick the ones worth making something about
-        and skip the rest, or save anything from Read, or paste a link below. Your picks and skips
-        shape what the next run suggests.
-      </p>
       <form className="field addlink" onSubmit={(e) => void addLink(e)} noValidate>
         <label className="field-label" htmlFor="addlink-input">
           Add a link

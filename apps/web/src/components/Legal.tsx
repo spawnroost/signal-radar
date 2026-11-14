@@ -26,9 +26,11 @@ function ContactLine() {
 function Policy({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section aria-labelledby="policy-title">
-      <h2 id="policy-title" className="page-title page-title-lg">
-        {title}
-      </h2>
+      <div className="page-head">
+        <h2 id="policy-title" className="page-title">
+          {title}
+        </h2>
+      </div>
       <div className="policy">
         {import.meta.env.DEV && LEGAL_PLACEHOLDER && (
           <p className="warn">

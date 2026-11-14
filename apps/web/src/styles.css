@@ -14,6 +14,8 @@
   --selection: light-dark(#8bc4f8, #2f5d86);
   --mark: color-mix(in srgb, var(--text-2) 62%, transparent); /* rank numbers and the › marker */
   --scrim: light-dark(rgb(38 37 30 / 0.4), rgb(10 9 6 / 0.55));
+  /* the radar's arcs: one ink for every placement (hero, page heads, empty states), heavier on dark */
+  --arcs-ink: light-dark(rgb(38 37 30 / 0.14), rgb(236 235 230 / 0.2));
   --shadow:
     0 12px 32px -8px light-dark(rgb(60 45 20 / 0.22), rgb(0 0 0 / 0.5)),
     0 2px 6px light-dark(rgb(60 45 20 / 0.1), rgb(0 0 0 / 0.3));
@@ -430,8 +432,7 @@ input {
   right: 0;
   width: 112px;
   height: 112px;
-  color: var(--text);
-  opacity: 0.13;
+  color: var(--arcs-ink);
   transform: rotate(180deg);
   pointer-events: none;
 }
@@ -883,6 +884,29 @@ a.btn {
   gap: var(--sp-3);
   padding: var(--sp-4) 0 var(--sp-2);
 }
+/* Arcs in the top-right corner of a page's head (Ideas, Saved, Pricing). The host makes its own
+   stacking context, so the arcs sit behind the title and lede, never over them. */
+.arcs-host {
+  position: relative;
+  isolation: isolate;
+}
+.head-arcs {
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  right: 0;
+  width: 112px;
+  height: 112px;
+  color: var(--arcs-ink);
+  transform: rotate(180deg);
+  pointer-events: none;
+}
+@media (min-width: 768px) {
+  .head-arcs {
+    width: 152px;
+    height: 152px;
+  }
+}
 .lede {
   margin-top: var(--sp-2);
   color: var(--text-2);
@@ -931,8 +955,7 @@ a.btn {
   bottom: 50%;
   width: 124px;
   height: 124px;
-  color: var(--text);
-  opacity: 0.14;
+  color: var(--arcs-ink);
   pointer-events: none;
   -webkit-mask-image: linear-gradient(to top, #000 25%, transparent 85%);
   mask-image: linear-gradient(to top, #000 25%, transparent 85%);
@@ -1396,13 +1419,18 @@ kbd {
 .plan-line {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
-  gap: var(--sp-1) var(--sp-3);
+  align-items: center;
+  gap: var(--sp-1) var(--sp-2);
   margin-top: var(--sp-2);
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
 }
-.plan-name {
-  font: 400 var(--fs-lg)/1.2 var(--serif);
-  letter-spacing: -0.01em;
+.plan-line-text {
+  text-wrap: pretty;
+}
+.plan-line .meta {
+  font-size: inherit;
 }
 .settings-sec > .warn {
   margin-top: var(--sp-3);
@@ -1469,24 +1497,21 @@ kbd {
 }
 .pricing-hero {
   position: relative;
+  isolation: isolate;
+  padding-top: var(--sp-4);
   padding-bottom: var(--sp-2);
 }
 .pricing-hero .page-title-lg {
   position: relative;
   max-width: 12ch;
-  padding-top: var(--sp-6);
+  padding-top: var(--sp-5);
   line-height: 1.02;
 }
-.pricing-arcs {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 168px;
-  height: 168px;
-  color: var(--text);
-  opacity: 0.16;
-  transform: rotate(180deg);
-  pointer-events: none;
+.pricing-hero[data-pro] .page-title-lg {
+  padding-top: var(--sp-3);
+}
+.pricing-back {
+  margin-top: var(--sp-5);
 }
 .pricing-pitch {
   position: relative;
@@ -1494,22 +1519,6 @@ kbd {
   margin-top: var(--sp-4);
   font: 400 var(--fs-lg)/1.45 var(--serif);
   text-wrap: pretty;
-}
-.pricing-you {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-3);
-  max-width: 40rem;
-  margin-bottom: var(--sp-4);
-  padding: var(--sp-3) var(--sp-4);
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-  font-size: var(--fs-sm);
-  line-height: 1.5;
-  text-wrap: pretty;
-}
-.pricing-you .plan-badge {
-  flex: none;
 }
 .pricing-soon {
   display: flex;
@@ -1739,7 +1748,7 @@ kbd {
 /* policy pages: plain prose in the same type and spacing as Settings */
 .policy {
   max-width: 38rem;
-  padding: var(--sp-5) 0 var(--sp-2);
+  padding: 0 0 var(--sp-2);
 }
 .policy .sheet-h {
   margin-top: var(--sp-6);
@@ -1751,17 +1760,13 @@ kbd {
 .policy p + p {
   margin-top: var(--sp-3);
 }
-.policy .lede {
-  margin-top: 0;
-}
 
 @media (min-width: 768px) {
-  .pricing-arcs {
-    width: 240px;
-    height: 240px;
-  }
   .pricing-hero .page-title-lg {
-    padding-top: var(--sp-7);
+    padding-top: var(--sp-6);
+  }
+  .pricing-hero[data-pro] .page-title-lg {
+    padding-top: var(--sp-3);
   }
   .passes {
     grid-template-columns: 1fr 1fr 1.3fr;
@@ -1856,8 +1861,7 @@ kbd {
   right: 0;
   width: 176px;
   height: 176px;
-  color: var(--text);
-  opacity: 0.12;
+  color: var(--arcs-ink);
   transform: rotate(180deg);
   pointer-events: none;
 }
@@ -1984,13 +1988,6 @@ kbd {
   color: var(--text-2);
   font: 400 var(--fs-sm)/1 var(--sans);
 }
-.tag {
-  padding: 3px var(--sp-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  font: 400 var(--fs-xs)/1 var(--sans);
-  color: var(--text-2);
-}
 .beat-title {
   font: 400 var(--fs-xl)/1.15 var(--serif);
   letter-spacing: -0.015em;
@@ -2066,7 +2063,6 @@ kbd {
   align-items: baseline;
   justify-content: space-between;
   gap: var(--sp-4);
-  padding-bottom: var(--sp-4);
 }
 .stepbar {
   display: flex;
@@ -2898,6 +2894,9 @@ kbd {
   .link,
   .link-quiet,
   .text-btn,
+  .tag,
+  .tag-x,
+  .item-title a,
   .keys summary {
     position: relative;
   }
@@ -2905,6 +2904,9 @@ kbd {
   .link::after,
   .link-quiet::after,
   .text-btn::after,
+  .tag::after,
+  .tag-x::after,
+  .item-title a::after,
   .keys summary::after {
     content: '';
     position: absolute;
@@ -3064,7 +3066,7 @@ kbd {
   font-size: var(--fs-sm);
 }
 .save-fold summary {
-  min-height: 32px;
+  padding-block: calc((var(--control) - 1.5em) / 2);
   cursor: pointer;
 }
 .save-fold summary:hover {
@@ -3149,7 +3151,7 @@ kbd {
   }
 }
 .tag-form input {
-  min-height: 32px;
+  min-height: var(--control);
   width: 11rem;
   max-width: 100%;
   padding: 0;

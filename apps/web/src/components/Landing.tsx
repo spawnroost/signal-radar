@@ -6,6 +6,7 @@ import { usePaymentsOpen } from '../lib/payments';
 import { REPO_URL } from '../lib/site';
 import { FREE_FEATURES, PRICE, PRO_FEATURES } from '../lib/tiers';
 import { RadarArcs } from '../icons';
+import { PlanPill } from './PlanLine';
 import { PolicyLinks } from './Footer';
 import { ItemList, Skeleton } from './ItemList';
 import { Link } from './Link';
@@ -241,7 +242,7 @@ export function Landing({
               <div className="beat-text">
                 <p className="beat-no" aria-hidden="true">
                   {String(i + 1).padStart(2, '0')}
-                  {b.pro && <span className="tag">Pro</span>}
+                  {b.pro && <PlanPill name="Pro" />}
                 </p>
                 <h3 className="beat-title">
                   {b.title}

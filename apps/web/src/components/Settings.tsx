@@ -8,6 +8,7 @@ import { creatorToSave, emptyCreator } from '../lib/creator';
 import { CreatorFields } from './CreatorFields';
 import { InstallRow } from './InstallRow';
 import { UpgradeLink } from './UpgradeLink';
+import { PlanLine } from './PlanLine';
 import { SourcesEditor } from './Editors';
 import { TopicPicker } from './TopicPicker';
 import { FeedAdder, FeedList } from './Feeds';
@@ -24,9 +25,11 @@ export function Settings({ me, defaults }: Props) {
   const { config } = useConfig();
   return (
     <section aria-labelledby="settings-title">
-      <h2 id="settings-title" className="page-title">
-        Settings
-      </h2>
+      <div className="page-head">
+        <h2 id="settings-title" className="page-title">
+          Settings
+        </h2>
+      </div>
       {config && defaults ? (
         <SettingsForm config={config} defaults={defaults} me={me} />
       ) : (
@@ -327,10 +330,9 @@ function PlanSection({ me }: { me: Me }) {
       <h3 id="set-plan" className="sheet-h">
         Plan
       </h3>
-      <p className="plan-line">
-        <span className="plan-name">{plan.title}</span>
-        {plan.detail && <span className="meta">{plan.detail}</span>}
-      </p>
+      <PlanLine name={badge.name}>
+        {plan.kind === 'trial' ? `Free trial. ${plan.detail}` : plan.detail || 'No end date.'}
+      </PlanLine>
       <div className="auth-actions">
         {plan.canUpgrade && (
           <UpgradeLink className="btn">

@@ -4,6 +4,7 @@ import { planBadge } from '../lib/plan';
 import { useInstall } from '../lib/install';
 import { PRO_SOON, usePaymentsOpen } from '../lib/payments';
 import { Link } from './Link';
+import { PlanPill } from './PlanLine';
 
 interface Props {
   me: MeState;
@@ -67,9 +68,7 @@ export function AccountMenu({ me, onSignOut }: Props) {
         <div className="menu" role="menu">
           <p className="menu-who meta">{user.email}</p>
           <p className="menu-plan">
-            <span className="plan-badge" data-pro={plan.name === 'Pro' || undefined}>
-              {plan.name}
-            </span>
+            <PlanPill name={plan.name} />
             {plan.note && <span className="meta">{plan.note}</span>}
           </p>
           {plan.name === 'Pro' &&

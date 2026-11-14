@@ -77,6 +77,10 @@ export interface PlanBadge {
   note: string;
   /** Days left on a trial, else null. */
   trialDays: number | null;
+  /** Days until Pro ends (trial or pass), else null: no end date, or on Free. */
+  daysLeft: number | null;
+  /** ISO end of Pro, else null. */
+  until: string | null;
   /** Pro with no end date (granted by hand, or the end is unknown). */
   open: boolean;
 }
@@ -84,7 +88,9 @@ export interface PlanBadge {
 /** One line for the account menu, Settings and Pricing: what plan the user is on and until when. */
 export function planBadge(me: Pick<Me, 'subscription' | 'proUntil'>, now = Date.now()): PlanBadge {
   const sub = me.subscription;
-  if (!sub.isPro) return { name: 'Free', note: '', trialDays: null, open: false };
+  if (!sub.isPro) {
+    return { name: 'Free', note: '', trialDays: null, daysLeft: null, until: null, open: false };
+  }
   const end = me.proUntil ?? (sub.status === 'trialing' ? sub.trialEndsAt : sub.currentPeriodEnd);
   const t = end ? Date.parse(end) : NaN;
   const days = Number.isNaN(t) ? null : Math.max(0, Math.ceil((t - now) / DAY));
@@ -95,8 +101,22 @@ export function planBadge(me: Pick<Me, 'subscription' | 'proUntil'>, now = Date.
         : days === 0
           ? ', ends today'
           : `, ${days} ${days === 1 ? 'day' : 'days'} left`;
-    return { name: 'Pro', note: `trial${left}`, trialDays: days, open: false };
+    return {
+      name: 'Pro',
+      note: `trial${left}`,
+      trialDays: days,
+      daysLeft: days,
+      until: end ?? null,
+      open: false,
+    };
   }
   const date = formatDate(end);
-  return { name: 'Pro', note: date ? `until ${date}` : '', trialDays: null, open: !date };
+  return {
+    name: 'Pro',
+    note: date ? `until ${date}` : '',
+    trialDays: null,
+    daysLeft: days,
+    until: date ? (end ?? null) : null,
+    open: !date,
+  };
 }

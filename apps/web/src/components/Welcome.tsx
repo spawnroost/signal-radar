@@ -135,9 +135,11 @@ export function Welcome({ config, defaults, isPro, localNiches }: Props) {
 
       {step === 1 ? (
         <>
-          <h2 id="welcome-title" className="page-title" ref={heading} tabIndex={-1}>
-            What do you follow?
-          </h2>
+          <div className="page-head">
+            <h2 id="welcome-title" className="page-title" ref={heading} tabIndex={-1}>
+              What do you follow?
+            </h2>
+          </div>
           <p className="lede">
             Tap the topics you cover. Each one brings its own keywords, which you can edit. You can
             change all of this later in Settings.
@@ -159,9 +161,11 @@ export function Welcome({ config, defaults, isPro, localNiches }: Props) {
         </>
       ) : step === 2 ? (
         <>
-          <h2 id="welcome-title" className="page-title" ref={heading} tabIndex={-1}>
-            What do you make?
-          </h2>
+          <div className="page-head">
+            <h2 id="welcome-title" className="page-title" ref={heading} tabIndex={-1}>
+              What do you make?
+            </h2>
+          </div>
           <p className="lede">
             This shapes the hooks and angles in your briefs. Everything here is optional, and you
             can change it later in Settings.
@@ -182,9 +186,11 @@ export function Welcome({ config, defaults, isPro, localNiches }: Props) {
         </>
       ) : (
         <>
-          <h2 id="welcome-title" className="page-title" ref={heading} tabIndex={-1}>
-            Where should it read?
-          </h2>
+          <div className="page-head">
+            <h2 id="welcome-title" className="page-title" ref={heading} tabIndex={-1}>
+              Where should it read?
+            </h2>
+          </div>
           <p className="lede">
             The built-in sources cover tech and games well. Feeds fill in the rest.
           </p>

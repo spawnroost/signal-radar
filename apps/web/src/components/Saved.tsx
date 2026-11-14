@@ -245,15 +245,18 @@ export function Saved() {
 
   return (
     <section aria-labelledby="saved-title">
-      <div className="page-head">
-        <h2 id="saved-title" className="page-title">
-          Saved
-        </h2>
+      <div className="arcs-host">
+        <RadarArcs className="head-arcs" />
+        <div className="page-head">
+          <h2 id="saved-title" className="page-title">
+            Saved
+          </h2>
+        </div>
+        <p className="lede queue-lede">
+          Links you want to read later, kept in a clean reader view. Tag them, archive what you have
+          read, and summarize any of them.
+        </p>
       </div>
-      <p className="lede queue-lede">
-        Links you want to read later, kept in a clean reader view. Tag them, archive what you have
-        read, and summarize any of them.
-      </p>
       <form className="field addlink" onSubmit={(e) => void add(e)} noValidate>
         <label className="field-label" htmlFor="save-input">
           Save a link
