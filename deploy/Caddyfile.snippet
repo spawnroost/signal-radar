@@ -1,0 +1,37 @@
+# Site block for signalradar.spawnroost.com, to paste into mo-kalama's deploy/Caddyfile on the server
+# (see deploy/README.md "Caddy"). Self-contained: it defines its own header snippet, so it does not
+# touch mo-kalama's `(security)`.
+#
+# Upstreams are Docker network aliases on the `signalradar_default` network, which the mo-kalama
+# Caddy container must join (compose change in deploy/README.md).
+
+(signalradar_security) {
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(self)"
+		# 'unsafe-inline' scripts: index.html carries two small inline bootstrap scripts (theme, landing swap).
+		# Razorpay Checkout: script from checkout.razorpay.com, iframe from api.razorpay.com (plus its
+		# checkout frame), XHR to api/lumberjack.razorpay.com. Article thumbnails are remote https images.
+		# OAuth (Google/GitHub) and Razorpay callbacks are top-level navigations, which CSP does not limit.
+		Content-Security-Policy "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self' https://api.razorpay.com https://checkout.razorpay.com; script-src 'self' 'unsafe-inline' https://checkout.razorpay.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://api.razorpay.com https://lumberjack.razorpay.com https://lumberjack-cx.razorpay.com https://checkout.razorpay.com; frame-src https://api.razorpay.com https://checkout.razorpay.com; worker-src 'self'; manifest-src 'self'; media-src 'self' https:; upgrade-insecure-requests"
+		-Server
+	}
+	encode zstd gzip
+}
+
+signalradar.spawnroost.com {
+	import signalradar_security
+
+	# API: never cached by the edge; the app sets its own headers.
+	handle /api/* {
+		reverse_proxy signalradar-api:8787
+	}
+
+	# Everything else is the static web app (landing, pricing, SPA routes, service worker).
+	handle {
+		reverse_proxy signalradar-web:8080
+	}
+}

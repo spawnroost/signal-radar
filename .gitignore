@@ -14,3 +14,6 @@ coverage
 # generated output (data/seen.json stays committed)
 data/feed.json
 dist
+
+# deploy: local-proof env
+deploy/env.local

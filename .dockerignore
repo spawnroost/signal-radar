@@ -1,0 +1,17 @@
+.git
+.github
+**/node_modules
+**/dist
+.env
+.env.*
+!.env.example
+deploy/env.local
+deploy/*.env
+data
+docs
+coverage
+*.log
+**/test
+**/tests
+vitest.config.ts
+.DS_Store
