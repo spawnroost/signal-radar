@@ -116,6 +116,8 @@ services:
     networks:
       default:
         aliases: [signalradar-api]
+      edge:
+        aliases: [signalradar-api]
     logging: *logging
 
   web:
@@ -136,6 +138,8 @@ services:
       retries: 3
     networks:
       default:
+        aliases: [signalradar-web]
+      edge:
         aliases: [signalradar-web]
     logging: *logging
 
@@ -185,6 +189,13 @@ services:
     depends_on:
       - api
       - web
+
+networks:
+  # The VPS-wide Caddy (/srv/edge) reaches api and web on this shared network.
+  # Locally: `docker network create edge` once.
+  edge:
+    name: ${EDGE_NETWORK:-edge}
+    external: true
 
 volumes:
   pgdata:
