@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import type { Data } from '../hooks';
 import { formatUpdated } from '../lib/format';
 import { rankFeed } from '../lib/rankClient';
+import { usePaymentsOpen } from '../lib/payments';
 import { REPO_URL } from '../lib/site';
 import { FREE_FEATURES, PRICE, PRO_FEATURES } from '../lib/tiers';
 import { PolicyLinks } from './Footer';
@@ -139,6 +140,7 @@ export function Landing({
   retry: () => void;
   dark?: boolean | null;
 }) {
+  const paymentsOpen = usePaymentsOpen();
   const top = useMemo(
     () =>
       data.status === 'ready'
@@ -292,7 +294,7 @@ export function Landing({
                 ))}
               </ul>
               <Link to="pricing" className="btn btn-solid">
-                Choose a pass
+                {paymentsOpen === false ? 'See the passes' : 'Choose a pass'}
               </Link>
             </section>
           </div>

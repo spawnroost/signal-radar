@@ -28,7 +28,16 @@ export function hideGate(): void {
 }
 
 /** The words for the sheet, true to the free plan (the Ideas queue and 3 summaries a day). */
-export function gateCopy(kind: GateKind): { title: string; line: string } {
+export function gateCopy(
+  kind: GateKind,
+  paymentsOpen: boolean | null = null,
+): { title: string; line: string } {
+  if (kind === 'pro' && paymentsOpen === false) {
+    return {
+      title: 'Pro is coming soon',
+      line: 'Payments open shortly. Free works fully now, and a free account gets the Ideas queue and 3 summaries a day.',
+    };
+  }
   if (kind === 'pro') {
     return {
       title: 'Get Pro',

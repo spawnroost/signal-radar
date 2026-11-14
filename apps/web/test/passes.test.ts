@@ -1,3 +1,4 @@
+import { PASSES } from '@radar/core/passes';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   daysLeft,
@@ -6,6 +7,7 @@ import {
   formatMoney,
   perMonth,
   proUntilNote,
+  savingsPercent,
   storeCurrency,
   storedCurrency,
 } from '../src/lib/passes';
@@ -25,6 +27,14 @@ describe('pass prices', () => {
     expect(perMonth(24900, 90, 'INR')).toBe('₹83 a month');
     expect(perMonth(79900, 365, 'INR')).toBe('₹67 a month');
     expect(perMonth(1500, 365, 'USD')).toBe('$1.25 a month');
+  });
+
+  it('works out what a longer pass saves against 30-day passes', () => {
+    const [p30, p90, p365] = PASSES;
+    expect(savingsPercent(p30!, 'INR')).toBe(0);
+    expect(savingsPercent(p90!, 'INR')).toBe(16);
+    expect(savingsPercent(p365!, 'INR')).toBe(34);
+    expect(savingsPercent(p365!, 'USD')).toBe(38);
   });
 
   it('names the pass length', () => {

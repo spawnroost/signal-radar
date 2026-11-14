@@ -229,6 +229,9 @@ importers:
 
   apps/cli:
     dependencies:
+      '@radar/api':
+        specifier: workspace:*
+        version: link:../api
       '@radar/core':
         specifier: workspace:*
         version: link:../../packages/core

@@ -4,6 +4,8 @@ import { dirname, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { existsSync } from 'node:fs';
 import { eq } from 'drizzle-orm';
+import { parseEnv } from '@radar/api/env';
+import { createPasswordUser } from '@radar/api/users';
 import { createDb, createPgStore, runMigrations, schema, type Db } from '@radar/db';
 import {
   buildSources,
@@ -24,11 +26,13 @@ const USAGE = `usage:
   radar db:migrate                      apply SQL migrations to DATABASE_URL
   radar user:list                       users with plan, status, trial end, niches
   radar user:pro --email <e>            dev: make a user Pro/active
+  radar user:create --email <e> --password <p> [--name <n>]
+                                        make a verified email+password user (refuses an existing email)
   radar notion:init --parent <pageId>   create the Topic Queue database, print its id
   radar telegram:webhook <publicBaseUrl>  point the bot at <base>/api/telegram/webhook (needs TELEGRAM_BOT_TOKEN, TELEGRAM_WEBHOOK_SECRET)
   radar telegram:webhook --delete       remove the bot webhook
 
-env (also read from ./.env): DATABASE_URL, DEEPSEEK_API_KEY, TELEGRAM_BOT_TOKEN, GITHUB_TOKEN,
+env (also read from ./.env): DATABASE_URL, BETTER_AUTH_SECRET, BETTER_AUTH_URL, WEB_ORIGIN (user:create), DEEPSEEK_API_KEY, TELEGRAM_BOT_TOKEN, GITHUB_TOKEN,
   VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT (Web Push),
   and for --local: NOTION_TOKEN, NOTION_DB_ID, TELEGRAM_CHAT_ID`;
 
@@ -167,6 +171,26 @@ async function cmdUserPro(values: { email?: string }) {
   }
 }
 
+async function cmdUserCreate(values: { email?: string; password?: string; name?: string }) {
+  if (!values.email || !values.password) {
+    throw new Error(
+      'usage: radar user:create --email <email> --password <password> [--name <name>]',
+    );
+  }
+  const env = parseEnv(process.env);
+  const db = openDb();
+  try {
+    const user = await createPasswordUser(db, env, {
+      email: values.email,
+      password: values.password,
+      name: values.name,
+    });
+    console.log(`created ${user.email}; sign in at /signin?method=password`);
+  } finally {
+    await db.$client.end({ timeout: 5 });
+  }
+}
+
 async function cmdRun(values: { dry?: boolean; config: string; 'data-dir'?: string }) {
   const { config, root } = await loadConfig(values.config);
   const dataDir = resolve(values['data-dir'] ?? resolve(root, config.dataDir));
@@ -280,6 +304,8 @@ async function main() {
       local: { type: 'boolean', default: false },
       delete: { type: 'boolean', default: false },
       email: { type: 'string' },
+      password: { type: 'string' },
+      name: { type: 'string' },
       help: { type: 'boolean', short: 'h', default: false },
     },
   });
@@ -290,6 +316,7 @@ async function main() {
   if (cmd === 'db:migrate') return cmdMigrate();
   if (cmd === 'user:list') return cmdUserList();
   if (cmd === 'user:pro') return cmdUserPro(values);
+  if (cmd === 'user:create') return cmdUserCreate(values);
   if (cmd === 'sources') return cmdSources(values);
   if (cmd === 'notion:init') return cmdNotionInit(values);
   if (cmd === 'telegram:webhook') return cmdTelegramWebhook(positionals[1], values.delete);

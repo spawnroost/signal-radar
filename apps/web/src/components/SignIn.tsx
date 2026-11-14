@@ -19,7 +19,6 @@ export function SignIn({ me, startSignup, onSignOut }: Props) {
   const [mode, setMode] = useState<'signin' | 'signup'>(startSignup ? 'signup' : 'signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [devEmail, setDevEmail] = useState(false);
   const [busy, setBusy] = useState(false);
   // Providers send failed sign-ins back here with ?error=...
   const [error, setError] = useState(() =>
@@ -49,11 +48,15 @@ export function SignIn({ me, startSignup, onSignOut }: Props) {
     );
   }
 
-  const signup = mode === 'signup';
   const providers = methods ? enabledProviders(methods) : [];
   const emailOnly = methods?.emailPrimary === true;
-  // The email form is the main UI when it is the only way in; beside providers it is dev-only.
-  const showForm = methods !== null && methods.email && (emailOnly || devEmail);
+  // The email form is the main UI when it is the only way in. Beside providers it is a hidden
+  // door for accounts made out of band (a payment reviewer's test login): it opens only from
+  // /signin?method=password, signs in only, and is not linked from anywhere.
+  const passwordOnly =
+    !emailOnly && new URLSearchParams(window.location.search).get('method') === 'password';
+  const showForm = methods !== null && methods.email && (emailOnly || passwordOnly);
+  const signup = emailOnly && mode === 'signup';
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -88,20 +91,15 @@ export function SignIn({ me, startSignup, onSignOut }: Props) {
           {signup ? 'Create your account' : 'Sign in'}
         </h2>
         <p className="lede">
-          Stories worth making something about, found for you every day. Pro is free for 7 days, no
-          card needed.
+          {passwordOnly
+            ? 'Stories worth making something about, found for you every day.'
+            : 'Stories worth making something about, found for you every day. Pro is free for 7 days, no card needed.'}
         </p>
       </div>
 
       {methods === null && <ProvidersSkeleton />}
 
       {providers.length > 0 && <ProviderButtons providers={providers} onError={setError} />}
-
-      {methods !== null && providers.length > 0 && methods.email && !devEmail && (
-        <button type="button" className="text-btn auth-dev" onClick={() => setDevEmail(true)}>
-          Use email (dev only)
-        </button>
-      )}
 
       {showForm && (
         <form onSubmit={submit} noValidate={false} className="form auth-form">
@@ -140,9 +138,11 @@ export function SignIn({ me, startSignup, onSignOut }: Props) {
           <button type="submit" className="btn btn-solid auth-submit" disabled={busy}>
             {busy ? 'One moment' : signup ? 'Start free trial' : 'Sign in'}
           </button>
-          <button type="button" className="text-btn auth-switch" onClick={toggle}>
-            {signup ? 'I already have an account' : 'Create an account'}
-          </button>
+          {emailOnly && (
+            <button type="button" className="text-btn auth-switch" onClick={toggle}>
+              {signup ? 'I already have an account' : 'Create an account'}
+            </button>
+          )}
         </form>
       )}
 

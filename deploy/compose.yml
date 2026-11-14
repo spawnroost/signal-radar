@@ -46,6 +46,10 @@ x-cron-env: &cron-env
   NODE_ENV: production
   TZ: ${TZ:-UTC}
   DATABASE_URL: *db-url
+  # radar user:create hashes passwords with the same auth setup as the API.
+  BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?set BETTER_AUTH_SECRET (32+ chars)}
+  BETTER_AUTH_URL: ${BETTER_AUTH_URL:?set BETTER_AUTH_URL (public https origin)}
+  WEB_ORIGIN: ${WEB_ORIGIN:?set WEB_ORIGIN (public https origin)}
   DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
   ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
   GITHUB_TOKEN: ${GITHUB_TOKEN:-}

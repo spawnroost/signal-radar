@@ -35,14 +35,20 @@ export const PRO_FEATURES: readonly string[] = [
   'A Telegram digest, web push and Notion sync',
 ];
 
-/** The short Free/Pro lists on the Pricing page. */
-export const FREE_SHORT: readonly string[] = [
-  'The ranked Read view and search',
-  'An Ideas queue and 3 summaries a day',
-];
+/** One row of the Free vs Pro table on the Pricing page: text for a limit, true for included. */
+export interface CompareRow {
+  label: string;
+  free: string | boolean;
+  pro: string | boolean;
+}
 
-export const PRO_SHORT: readonly string[] = [
-  '30 saved links and 100 summaries a day',
-  'Hooks, angles and title drafts for queued stories',
-  'Your RSS feeds, a Telegram digest and Notion sync',
+export const COMPARE: readonly CompareRow[] = [
+  { label: 'The ranked Read view and search', free: true, pro: true },
+  { label: 'Ideas queue, ranked by your topics', free: true, pro: true },
+  { label: 'Saved links', free: '10 a day', pro: '30 a day' },
+  { label: 'Page summaries', free: '3 a day', pro: '100 a day' },
+  { label: 'A hook, an angle and a title draft for each queued story', free: false, pro: true },
+  { label: 'A queue that learns from what you pick and skip', free: false, pro: true },
+  { label: 'Your own RSS feeds', free: false, pro: true },
+  { label: 'A Telegram digest, web push and Notion sync', free: false, pro: true },
 ];

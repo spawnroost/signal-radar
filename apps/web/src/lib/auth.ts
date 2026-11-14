@@ -20,6 +20,8 @@ export interface AuthMethods {
   email: boolean;
   /** Email + password is the only way in, so it is the main form rather than a dev extra. */
   emailPrimary: boolean;
+  /** New accounts can be made with email + password (false: it only signs existing ones in). */
+  emailSignup: boolean;
 }
 
 /** What to show when the server can't be reached: the email form, so the screen is not empty. */
@@ -28,6 +30,7 @@ export const FALLBACK_METHODS: AuthMethods = {
   github: false,
   email: true,
   emailPrimary: true,
+  emailSignup: true,
 };
 
 let methodsCache: Promise<AuthMethods> | null = null;

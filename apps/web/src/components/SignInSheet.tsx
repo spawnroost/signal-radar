@@ -3,6 +3,7 @@ import { CloseIcon } from '../icons';
 import { enabledProviders, useAuthMethods } from '../lib/auth';
 import { gate, gateCopy, hideGate } from '../lib/gate';
 import { useMe } from '../lib/me';
+import { usePaymentsOpen } from '../lib/payments';
 import { Link } from './Link';
 import { ProviderButtons } from './ProviderButtons';
 
@@ -10,6 +11,7 @@ import { ProviderButtons } from './ProviderButtons';
 export function SignInSheet() {
   const kind = gate.use();
   const me = useMe();
+  const paymentsOpen = usePaymentsOpen();
   const methods = useAuthMethods();
   const providers = methods ? enabledProviders(methods) : [];
   const [error, setError] = useState('');
@@ -23,7 +25,7 @@ export function SignInSheet() {
     if (!open && d.open) d.close();
   }, [open]);
 
-  const copy = kind ? gateCopy(kind) : null;
+  const copy = kind ? gateCopy(kind, paymentsOpen) : null;
 
   return (
     <dialog

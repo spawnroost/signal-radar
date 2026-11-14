@@ -1,5 +1,5 @@
 import { formatDate } from './plan';
-import type { Currency, Pass } from '@radar/core/passes';
+import { PASSES, type Currency, type Pass } from '@radar/core/passes';
 
 export type { Currency, Pass };
 
@@ -47,6 +47,17 @@ export function perMonth(amount: number, days: number, currency: Currency): stri
   const minor = amount / Math.max(1, Math.round(days / (365 / 12)));
   const rounded = currency === 'INR' ? Math.round(minor / 100) * 100 : Math.round(minor);
   return `${formatMoney(rounded, currency)} a month`;
+}
+
+/**
+ * How much cheaper a pass is than buying the shortest pass over and over for the same days,
+ * as a whole percent (0 for the shortest pass itself).
+ */
+export function savingsPercent(pass: Pass, currency: Currency): number {
+  const price = (p: Pass) => (currency === 'INR' ? p.inr : p.usd);
+  const base = PASSES.reduce((a, b) => (a.days <= b.days ? a : b));
+  const full = (price(base) / base.days) * pass.days;
+  return Math.max(0, Math.round((1 - price(pass) / full) * 100));
 }
 
 export function durationLabel(days: number): string {

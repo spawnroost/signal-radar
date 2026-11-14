@@ -9,7 +9,7 @@ import { afterAll, describe, expect, it } from 'vitest';
 import { fillRoot, normalizeSiteUrl, setPageHead } from '../build/prerender';
 import { Landing } from '../src/components/Landing';
 import { Pricing } from '../src/components/Pricing';
-import { FREE_FEATURES, FREE_SHORT, PRICE, PRO_FEATURES, PRO_SHORT } from '../src/lib/tiers';
+import { COMPARE, FREE_FEATURES, PRICE, PRO_FEATURES } from '../src/lib/tiers';
 
 const html = (node: Parameters<typeof renderToStaticMarkup>[0]) =>
   renderToStaticMarkup(node).replaceAll('&#x27;', "'").replaceAll('&amp;', '&');
@@ -22,7 +22,7 @@ describe('tier data', () => {
     );
     const pricing = html(createElement(Pricing, { me: { status: 'loading' } }));
     for (const f of [...FREE_FEATURES, ...PRO_FEATURES]) expect(landing).toContain(f);
-    for (const f of [...FREE_SHORT, ...PRO_SHORT]) expect(pricing).toContain(f);
+    for (const row of COMPARE) expect(pricing).toContain(row.label);
     expect(landing).toContain(PRICE.pro);
     // Rupees by default for everyone; dollars only when the visitor picks them.
     expect(pricing).toContain('₹99');

@@ -79,3 +79,15 @@ export const SearchIcon = () => (
     <path d="m16 16 4.5 4.5" />
   </svg>
 );
+
+/** The wordmark's sweeps repeated as a quiet field of arcs; decoration only, drawn in the ink colour. */
+export const RadarArcs = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 240 240" fill="none" aria-hidden="true" focusable="false">
+    <g stroke="currentColor" strokeWidth="1" vectorEffect="non-scaling-stroke">
+      <path d="M60 240A60 60 0 0 0 0 180" />
+      <path d="M110 240A110 110 0 0 0 0 130" />
+      <path d="M160 240A160 160 0 0 0 0 80" />
+      <path d="M210 240A210 210 0 0 0 0 30" />
+    </g>
+  </svg>
+);

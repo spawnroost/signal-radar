@@ -14,18 +14,31 @@ export interface AuthMethods {
   email: boolean;
   /** Email + password is the only way in, so the UI shows it as the main form, not a dev extra. */
   emailPrimary: boolean;
+  /**
+   * New accounts can be made with email + password. False while a provider is configured in
+   * production: email then only signs existing accounts in (a reviewer's test account).
+   */
+  emailSignup: boolean;
 }
 
 /**
- * A social provider is on only when both of its keys are set. Email + password is on only while
- * no provider is configured; once one is, it is off, except in dev and test (NODE_ENV not
- * production) where it stays for the demo account and the tests.
+ * A social provider is on only when both of its keys are set. With no provider, email + password
+ * is the way in and sign-up is open. Once a provider is configured, production keeps email
+ * sign-in for accounts made out of band (`radar user:create`) but closes sign-up; dev and test
+ * keep sign-up open for the demo account and the tests.
  */
 export function authMethods(env: ApiEnv): AuthMethods {
   const google = Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET);
   const github = Boolean(env.GITHUB_CLIENT_ID && env.GITHUB_CLIENT_SECRET);
   const emailPrimary = !google && !github;
-  return { google, github, email: emailPrimary || env.NODE_ENV !== 'production', emailPrimary };
+  const production = env.NODE_ENV === 'production';
+  return {
+    google,
+    github,
+    email: true,
+    emailPrimary,
+    emailSignup: emailPrimary || !production,
+  };
 }
 
 export function createAuth(db: Db, env: ApiEnv) {
@@ -39,7 +52,7 @@ export function createAuth(db: Db, env: ApiEnv) {
         ? [env.WEB_ORIGIN]
         : [env.WEB_ORIGIN, 'https://*.trycloudflare.com'],
     database: drizzleAdapter(db, { provider: 'pg', schema }),
-    emailAndPassword: { enabled: methods.email },
+    emailAndPassword: { enabled: methods.email, disableSignUp: !methods.emailSignup },
     // Google and GitHub sign-in are each on only when both of their keys are set. A login with
     // the same verified email as an existing account joins that account instead of making a second.
     socialProviders: {

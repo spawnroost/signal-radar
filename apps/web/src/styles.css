@@ -896,13 +896,8 @@ a.btn {
 .auth-submit {
   width: 100%;
 }
-.auth-switch,
-.auth-dev {
+.auth-switch {
   justify-self: center;
-}
-.auth-dev {
-  display: block;
-  margin: var(--sp-4) auto 0;
 }
 .auth-error {
   margin-top: var(--sp-3);
@@ -1227,6 +1222,51 @@ kbd {
   outline-color: var(--canvas);
 }
 
+/* one-time install hint: floats over the corner, never pushes the page */
+.install-hint {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  z-index: 7;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  max-width: 26rem;
+  margin: 0 auto;
+  padding: var(--sp-3) var(--sp-2) var(--sp-3) var(--sp-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  animation: sheet-up 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.install-hint-text {
+  flex: 1;
+  font-size: var(--fs-sm);
+  line-height: 1.45;
+  text-wrap: pretty;
+}
+.install-hint-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+}
+.install-hint .icon-btn {
+  border-color: transparent;
+}
+@media (min-width: 768px) {
+  .install-hint {
+    left: 24px;
+    right: auto;
+    margin: 0;
+  }
+}
+.menu-note {
+  padding: var(--sp-2);
+  line-height: 1.4;
+}
+
 /* settings */
 .settings-form {
   display: grid;
@@ -1336,16 +1376,87 @@ kbd {
 .plan-list li:first-child {
   padding-top: 0;
 }
-/* prepaid passes: one calm card per pass, stacked on phones */
-.pricing-lede {
-  max-width: 38rem;
+/* ---------- pricing ----------
+   Parchment with one dark card: the 1-year pass is the page's single heavy object, the rest stays
+   flat. The sweeping arcs are the wordmark repeated as texture, drawn in ink at low opacity. */
+.pricing {
+  position: relative;
 }
+.pricing-hero {
+  position: relative;
+  padding-bottom: var(--sp-2);
+}
+.pricing-hero .page-title-lg {
+  position: relative;
+  max-width: 12ch;
+  padding-top: var(--sp-6);
+  line-height: 1.02;
+}
+.pricing-arcs {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 168px;
+  height: 168px;
+  color: var(--text);
+  opacity: 0.16;
+  transform: rotate(180deg);
+  pointer-events: none;
+}
+.pricing-pitch {
+  position: relative;
+  max-width: 34rem;
+  margin-top: var(--sp-4);
+  font: 400 var(--fs-lg)/1.45 var(--serif);
+  text-wrap: pretty;
+}
+.pricing-soon {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  max-width: 40rem;
+  margin-top: var(--sp-5);
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+.pricing-soon strong {
+  font-weight: 600;
+}
+.pricing-soon-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  margin-top: 7px;
+  border-radius: 50%;
+  background: var(--link);
+  animation: soon-ping 2.4s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+@keyframes soon-ping {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--link) 45%, transparent);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 9px transparent;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pricing-soon-dot {
+    animation: none;
+  }
+}
+
 .passes {
   display: grid;
   gap: var(--sp-3);
-  margin-top: var(--sp-5);
+  margin-top: var(--sp-6);
 }
 .pass {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -1353,76 +1464,176 @@ kbd {
   padding: var(--sp-5);
   border-radius: var(--radius-lg);
   background: var(--surface);
+  overflow: hidden;
 }
-/* the recommended pass is simply a step darker; no coloured edge */
 .pass[data-best] {
-  background: var(--raised);
+  order: -1; /* the recommended pass leads on phones */
+  background: var(--text);
+  color: var(--canvas);
+  box-shadow: var(--shadow);
+}
+.pass-arcs {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 150px;
+  height: 150px;
+  color: var(--canvas);
+  opacity: 0.2;
+  transform: rotate(180deg);
+  pointer-events: none;
 }
 .pass-head {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--sp-3);
   align-self: stretch;
-  min-height: 24px;
+  min-height: 28px;
 }
 .pass-title {
-  font-size: var(--fs-md);
-  font-weight: 500;
+  font: 400 var(--fs-lg)/1.2 var(--serif);
+  letter-spacing: -0.01em;
 }
 .pass-flag {
-  padding: 1px var(--sp-2);
+  padding: 2px var(--sp-3);
   border-radius: 999px;
   background: var(--canvas);
   color: var(--text);
   font-size: var(--fs-xs);
-  font-weight: 500;
+  font-weight: 600;
 }
 .pass-price {
-  margin-top: var(--sp-2);
+  position: relative;
+  margin-top: var(--sp-3);
 }
-.pass-month {
-  margin-bottom: var(--sp-4);
+.pass[data-best] .price {
+  font-size: var(--fs-3xl);
+  letter-spacing: -0.03em;
+}
+.pass-month,
+.pass-save {
+  position: relative;
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-2);
+}
+.pass[data-best] .pass-month,
+.pass[data-best] .pass-save {
+  color: color-mix(in srgb, var(--canvas) 74%, transparent);
+}
+.pass-save {
+  margin-bottom: var(--sp-5);
 }
 .pass .btn {
+  position: relative;
   align-self: stretch;
   margin-top: auto;
+}
+.pass[data-best] .btn {
+  background: var(--canvas);
+  border-color: var(--canvas);
+  color: var(--text);
+}
+.pass[data-best] .btn:disabled {
+  opacity: 0.7;
+}
+.pass .btn:disabled {
+  cursor: not-allowed;
 }
 .pass-status {
   margin-top: var(--sp-4);
   max-width: 40rem;
 }
-.pass-notes {
-  display: grid;
-  justify-items: start;
-  gap: var(--sp-1);
-  margin-top: var(--sp-5);
-  max-width: 40rem;
-  color: var(--text-2);
+.pass-currency {
+  margin-top: var(--sp-3);
+}
+
+.pricing-h {
+  font: 400 var(--fs-xl)/1.15 var(--serif);
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.compare {
+  margin-top: var(--sp-8);
+}
+.compare-table {
+  width: 100%;
+  margin-top: var(--sp-4);
+  border-collapse: collapse;
   font-size: var(--fs-sm);
+  line-height: 1.4;
+}
+.compare-table th,
+.compare-table td {
+  padding: var(--sp-3) var(--sp-2);
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.compare-table thead th {
+  vertical-align: bottom;
+  font: 400 var(--fs-lg)/1.2 var(--serif);
+  text-align: center;
+}
+.compare-table thead th:first-child {
+  text-align: left;
+}
+.compare-price {
+  display: block;
+  margin-top: 2px;
+  font: 400 var(--fs-xs)/1.4 var(--sans);
+  color: var(--text-2);
+}
+.compare-table tbody th {
+  font-weight: 400;
+  text-align: left;
   text-wrap: pretty;
 }
-.pass-notes .text-btn {
-  margin-top: var(--sp-2);
+.compare-table td {
+  width: 5.5rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
 }
-.tier-lists {
+/* Pro is a step darker than the page: the column reads as one band */
+.compare-table th:last-child,
+.compare-table td:last-child {
+  background: var(--surface);
+}
+.compare-yes {
+  display: inline-flex;
+  color: var(--text);
+}
+.compare-no {
+  display: inline-block;
+  width: 10px;
+  height: 1px;
+  background: var(--mark);
+  vertical-align: middle;
+}
+.compare-note {
+  margin-top: var(--sp-4);
+}
+
+.faq {
+  margin-top: var(--sp-8);
+}
+.faq dl {
   display: grid;
   gap: var(--sp-5);
-  margin-top: var(--sp-6);
-  max-width: 40rem;
+  margin-top: var(--sp-4);
 }
-.tier-lists h2 {
-  font: 400 var(--fs-lg)/1.2 var(--serif);
+.faq dt {
+  font: 400 var(--fs-lg)/1.25 var(--serif);
   letter-spacing: -0.01em;
-  margin-bottom: var(--sp-2);
 }
-.tier-lists li {
-  padding: var(--sp-1) 0;
+.faq dd {
+  margin-left: 0;
+  margin-top: var(--sp-1);
+  max-width: 38rem;
+  color: var(--text-2);
   text-wrap: pretty;
-}
-.pricing-signin {
-  margin-top: var(--sp-6);
-  max-width: 40rem;
 }
 /* policy pages: plain prose in the same type and spacing as Settings */
 .policy {
@@ -1444,12 +1655,30 @@ kbd {
 }
 
 @media (min-width: 768px) {
-  .passes {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  .pricing-arcs {
+    width: 240px;
+    height: 240px;
   }
-  .tier-lists {
+  .pricing-hero .page-title-lg {
+    padding-top: var(--sp-7);
+  }
+  .passes {
+    grid-template-columns: 1fr 1fr 1.3fr;
+    align-items: stretch;
+    margin-top: var(--sp-7);
+  }
+  .pass[data-best] {
+    order: 0;
+  }
+  .compare-table {
+    font-size: var(--fs-md);
+  }
+  .compare-table td {
+    width: 8rem;
+  }
+  .faq dl {
     grid-template-columns: 1fr 1fr;
-    gap: var(--sp-6);
+    gap: var(--sp-6) var(--sp-7);
   }
 }
 

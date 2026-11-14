@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import type { MeState } from '../lib/me';
 import { proUntilNote } from '../lib/passes';
+import { useInstall } from '../lib/install';
+import { PRO_SOON, usePaymentsOpen } from '../lib/payments';
 import { Link } from './Link';
 
 interface Props {
@@ -10,6 +12,8 @@ interface Props {
 
 export function AccountMenu({ me, onSignOut }: Props) {
   const [open, setOpen] = useState(false);
+  const { install } = useInstall();
+  const paymentsOpen = usePaymentsOpen();
   const root = useRef<HTMLDivElement>(null);
   const button = useRef<HTMLButtonElement>(null);
 
@@ -62,14 +66,37 @@ export function AccountMenu({ me, onSignOut }: Props) {
       {open && (
         <div className="menu" role="menu">
           <p className="menu-who meta">{user.email}</p>
-          {proUntil && (
-            <Link to="pricing" role="menuitem" className="menu-item" onClick={() => setOpen(false)}>
-              {proUntil} · Add days
-            </Link>
-          )}
+          {proUntil &&
+            (paymentsOpen === false ? (
+              <p className="menu-note meta">
+                {proUntil} · {PRO_SOON}
+              </p>
+            ) : (
+              <Link
+                to="pricing"
+                role="menuitem"
+                className="menu-item"
+                onClick={() => setOpen(false)}
+              >
+                {proUntil} · Add days
+              </Link>
+            ))}
           <Link to="settings" role="menuitem" className="menu-item" onClick={() => setOpen(false)}>
             Settings
           </Link>
+          {install && (
+            <button
+              type="button"
+              role="menuitem"
+              className="menu-item"
+              onClick={() => {
+                setOpen(false);
+                install();
+              }}
+            >
+              Install app
+            </button>
+          )}
           <button
             type="button"
             role="menuitem"

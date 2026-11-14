@@ -4,6 +4,7 @@ import { PolicyLinks } from './components/Footer';
 import { Frame } from './components/Frame';
 import { Gate } from './components/Gate';
 import { ImportOffer } from './components/ImportOffer';
+import { InstallHint } from './components/InstallHint';
 import { Landing } from './components/Landing';
 import { Contact, Privacy, Refunds, Terms } from './components/Legal';
 import { Link } from './components/Link';
@@ -18,7 +19,7 @@ import { SignIn } from './components/SignIn';
 import { SignInSheet } from './components/SignInSheet';
 import { FormSkeleton, PageSkeleton } from './components/Skeletons';
 import { Welcome } from './components/Welcome';
-import { useInstallPrompt, useNow, useOnline, useRadarData } from './hooks';
+import { useNow, useOnline, useRadarData } from './hooks';
 import { signOut } from './lib/auth';
 import { clearConfig, loadConfig, patchConfig, useConfig } from './lib/config';
 import { clearMe, useMe } from './lib/me';
@@ -68,6 +69,9 @@ const TITLES: Record<RouteName, string> = {
   contact: PAGE_META['/contact'].title,
 };
 
+/** Where the one-time install hint may appear: the working pages, never sign-in or the landing. */
+const HINT_ROUTES = new Set<RouteName>(['read', 'queue', 'saved', 'settings']);
+
 const offeredBefore = (userId: string) => {
   try {
     return localStorage.getItem(importFlagKey(userId)) !== null;
@@ -80,7 +84,6 @@ export function App() {
   const { data, retry } = useRadarData();
   const online = useOnline();
   const now = useNow();
-  const install = useInstallPrompt();
   const route = useRoute();
   const me = useMe();
   const { config, syncError } = useConfig();
@@ -317,7 +320,6 @@ export function App() {
           prefs={prefs}
           now={now}
           stale={stale}
-          install={install}
           syncError={syncError}
           onNiches={setNiches}
           onToggleSource={toggleSource}
@@ -359,6 +361,7 @@ export function App() {
         <SignIn me={me} startSignup={route.signup} onSignOut={() => void onSignOut()} />
       )}
       <SignInSheet />
+      {HINT_ROUTES.has(route.name) && <InstallHint />}
     </Frame>
   );
 }

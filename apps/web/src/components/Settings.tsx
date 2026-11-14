@@ -7,7 +7,8 @@ import { planSummary } from '../lib/plan';
 import { proUntilNote } from '../lib/passes';
 import { creatorToSave, emptyCreator } from '../lib/creator';
 import { CreatorFields } from './CreatorFields';
-import { Link } from './Link';
+import { InstallRow } from './InstallRow';
+import { UpgradeLink } from './UpgradeLink';
 import { SourcesEditor } from './Editors';
 import { TopicPicker } from './TopicPicker';
 import { FeedAdder, FeedList } from './Feeds';
@@ -215,14 +216,14 @@ function SettingsForm({
                 Pro again.
               </p>
             )}
-            <Link to="pricing" className="link">
-              See Pro
-            </Link>
+            <UpgradeLink>See Pro</UpgradeLink>
           </>
         )}
       </section>
 
       <Notifications me={me} />
+
+      <InstallRow />
 
       <section className="settings-sec" aria-labelledby="set-notion">
         <h3 id="set-notion" className="sheet-h">
@@ -333,15 +334,11 @@ function PlanSection({ me }: { me: Me }) {
       </p>
       <div className="auth-actions">
         {plan.canUpgrade && (
-          <Link to="pricing" className="btn">
+          <UpgradeLink className="btn">
             {plan.kind === 'free' ? 'See Pricing' : 'Keep Pro'}
-          </Link>
+          </UpgradeLink>
         )}
-        {proUntil && !plan.canUpgrade && (
-          <Link to="pricing" className="btn">
-            Add days
-          </Link>
-        )}
+        {proUntil && !plan.canUpgrade && <UpgradeLink className="btn">Add days</UpgradeLink>}
       </div>
     </section>
   );

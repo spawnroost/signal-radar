@@ -36,7 +36,6 @@ interface Props {
   prefs: Prefs | null;
   now: number;
   stale: boolean;
-  install: (() => void) | null;
   syncError: boolean;
   onNiches: (niches: Niche[]) => void;
   onToggleSource: (id: string) => void;
@@ -56,7 +55,6 @@ export function ReadView({
   prefs,
   now,
   stale,
-  install,
   syncError,
   onNiches,
   onToggleSource,
@@ -237,11 +235,6 @@ export function ReadView({
                 </>
               )}
               <div className="filterbar-actions">
-                {install && (
-                  <button type="button" className="chip" onClick={install}>
-                    Install app
-                  </button>
-                )}
                 <button type="button" className="chip" onClick={() => openSheet()}>
                   Customize
                 </button>
@@ -316,6 +309,7 @@ export function ReadView({
                 <EmptyState
                   topic={activeTopics.length > 0}
                   source={narrowed}
+                  noTopics={!hasTopics}
                   onCustomize={() => openSheet()}
                   onClearFilter={() => {
                     setTopic(ALL_TOPICS);

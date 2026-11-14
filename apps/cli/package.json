@@ -8,6 +8,7 @@
     "radar": "./src/index.ts"
   },
   "dependencies": {
+    "@radar/api": "workspace:*",
     "@radar/core": "workspace:*",
     "@radar/db": "workspace:*",
     "drizzle-orm": "^0.45.4"

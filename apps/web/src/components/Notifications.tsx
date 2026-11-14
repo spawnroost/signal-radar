@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, ApiError } from '../lib/api';
 import { refreshMe, type Me } from '../lib/me';
 import { needsInstall, status, subscribe, unsubscribe, type PushStatus } from '../lib/push';
-import { Link } from './Link';
+import { UpgradeLink } from './UpgradeLink';
 import { LineSkeleton } from './Skeletons';
 
 const POLL_MS = 3000;
@@ -27,9 +27,7 @@ export function Notifications({ me }: { me: Me }) {
             Get a push on this device or a Telegram message when new items land in your queue. This
             is part of Pro.
           </p>
-          <Link to="pricing" className="link">
-            See Pro
-          </Link>
+          <UpgradeLink>See Pro</UpgradeLink>
         </>
       )}
     </section>

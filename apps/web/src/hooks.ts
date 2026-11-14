@@ -53,33 +53,6 @@ export function useOnline(): boolean {
   return online;
 }
 
-interface InstallEvent extends Event {
-  prompt(): Promise<unknown>;
-}
-
-/** Exposes an install action only after the browser fires `beforeinstallprompt`. */
-export function useInstallPrompt(): (() => void) | null {
-  const [event, setEvent] = useState<InstallEvent | null>(null);
-  useEffect(() => {
-    const onPrompt = (e: Event) => {
-      e.preventDefault();
-      setEvent(e as InstallEvent);
-    };
-    const onInstalled = () => setEvent(null);
-    window.addEventListener('beforeinstallprompt', onPrompt);
-    window.addEventListener('appinstalled', onInstalled);
-    return () => {
-      window.removeEventListener('beforeinstallprompt', onPrompt);
-      window.removeEventListener('appinstalled', onInstalled);
-    };
-  }, []);
-  if (!event) return null;
-  return () => {
-    void event.prompt();
-    setEvent(null);
-  };
-}
-
 /** Re-renders once a minute so ages and "updated" labels stay honest. */
 export function useNow(): number {
   const [now, setNow] = useState(() => Date.now());

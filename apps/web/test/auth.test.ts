@@ -17,7 +17,13 @@ describe('authErrorMessage', () => {
 });
 
 describe('enabledProviders', () => {
-  const base = { google: false, github: false, email: true, emailPrimary: false };
+  const base = {
+    google: false,
+    github: false,
+    email: true,
+    emailPrimary: false,
+    emailSignup: false,
+  };
   it('lists switched-on providers in display order', () => {
     expect(enabledProviders({ ...base, google: true, github: true })).toEqual(['google', 'github']);
     expect(enabledProviders({ ...base, github: true })).toEqual(['github']);

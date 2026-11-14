@@ -15,6 +15,6 @@ export function createStore<T>(initial: T) {
       subs.delete(fn);
     };
   };
-  const use = () => useSyncExternalStore(subscribe, get);
+  const use = () => useSyncExternalStore(subscribe, get, get);
   return { get, set, use };
 }

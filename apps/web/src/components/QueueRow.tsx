@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { ItemActions } from './ItemActions';
-import { Link } from './Link';
+import { UpgradeLink } from './UpgradeLink';
 import { META_SEP } from '../lib/format';
 import {
   copyText,
@@ -151,10 +151,7 @@ export function QueueRow({
 
       {locked && !item.hook && !item.angle && !item.titleDraft && (
         <p className="q-locked">
-          Hooks, angles and title drafts come with Pro.{' '}
-          <Link to="pricing" className="link">
-            See Pricing
-          </Link>
+          Hooks, angles and title drafts come with Pro. <UpgradeLink>See Pricing</UpgradeLink>
         </p>
       )}
 

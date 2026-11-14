@@ -1,11 +1,19 @@
 interface EmptyProps {
   topic: boolean;
   source: boolean;
+  /** No topics are chosen ("show everything"), so an empty feed means nothing has arrived yet. */
+  noTopics?: boolean;
   onCustomize: () => void;
   onClearFilter: () => void;
 }
 
-export function EmptyState({ topic, source, onCustomize, onClearFilter }: EmptyProps) {
+export function EmptyState({
+  topic,
+  source,
+  noTopics = false,
+  onCustomize,
+  onClearFilter,
+}: EmptyProps) {
   const filtered = topic || source;
   return (
     <div className="state">
@@ -15,7 +23,9 @@ export function EmptyState({ topic, source, onCustomize, onClearFilter }: EmptyP
           ? 'No stories in the feed match this topic right now.'
           : source
             ? 'No stories from the sources you picked right now.'
-            : 'No stories match your topics right now.'}{' '}
+            : noTopics
+              ? 'The first stories are on their way. The radar checks sources twice a day.'
+              : 'No stories match your topics right now.'}{' '}
         {filtered && (
           <>
             <button type="button" className="link" onClick={onClearFilter}>
@@ -25,7 +35,7 @@ export function EmptyState({ topic, source, onCustomize, onClearFilter }: EmptyP
           </>
         )}
         <button type="button" className="link" onClick={onCustomize}>
-          change your topics
+          {filtered ? 'change your topics' : noTopics ? 'Choose topics' : 'Change your topics'}
         </button>
         .
       </p>
