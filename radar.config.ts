@@ -15,8 +15,10 @@ const subreddits = [
 
 export default defineConfig({
   // Owner: fill these in before going live. They appear on the Terms, Privacy, Refunds and Contact pages.
-  legalName: 'TODO',
-  contactEmail: 'TODO',
+  legalName: 'Sambit Nayak',
+  contactEmail: 'support@spawnroost.com',
+  // Turn on once international (USD) payments are enabled on the Razorpay account.
+  internationalPayments: false,
 
   niches: [
     {

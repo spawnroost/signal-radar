@@ -10,7 +10,14 @@ import {
 import { showGate, setGateNext } from '../lib/gate';
 import { refreshMe, type MeState } from '../lib/me';
 import { formatDate } from '../lib/plan';
-import { CURRENCY_SYMBOL, durationLabel, perMonth } from '../lib/passes';
+import {
+  CURRENCY_SYMBOL,
+  INTERNATIONAL_PAYMENTS,
+  durationLabel,
+  perMonth,
+  storeCurrency,
+  storedCurrency,
+} from '../lib/passes';
 import { FREE_SHORT, PRO_SHORT } from '../lib/tiers';
 import { Link } from './Link';
 
@@ -18,7 +25,7 @@ import { Link } from './Link';
 const CHECKOUT_INK = '#26251e';
 
 export function Pricing({ me }: { me: MeState }) {
-  const [currency, setCurrency] = useState<Currency>('USD');
+  const [currency, setCurrency] = useState<Currency>(() => storedCurrency());
   /** Null until the server has said whether Razorpay keys are set. */
   const [enabled, setEnabled] = useState<boolean | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
@@ -27,7 +34,7 @@ export function Pricing({ me }: { me: MeState }) {
 
   useEffect(() => {
     let live = true;
-    fetchPasses()
+    fetchPasses(storedCurrency())
       .then((info) => {
         if (!live) return;
         setCurrency(info.currency);
@@ -98,60 +105,69 @@ export function Pricing({ me }: { me: MeState }) {
       </p>
 
       <ul className="passes">
-        {PASSES.map((pass) => (
-          <li key={pass.id} className="pass">
-            <div className="pass-head">
-              <h3 className="pass-title">{durationLabel(pass.days)}</h3>
-              {pass.id === 'p365' && <span className="meta">Best value</span>}
-            </div>
-            <p className="pass-price">
-              <span className="price">{formatPrice(pass, currency)}</span>
-            </p>
-            {pass.days > 31 && (
-              <p className="meta">
-                {perMonth(currency === 'INR' ? pass.inr : pass.usd, pass.days, currency)}
+        {PASSES.map((pass) => {
+          const best = pass.id === 'p365';
+          const amount = currency === 'INR' ? pass.inr : pass.usd;
+          return (
+            <li key={pass.id} className="pass" data-best={best || undefined}>
+              <div className="pass-head">
+                <h3 className="pass-title">{durationLabel(pass.days)}</h3>
+                {best && <span className="pass-flag">Best value</span>}
+              </div>
+              <p className="pass-price">
+                <span className="price">{formatPrice(pass, currency)}</span>
               </p>
-            )}
-            <button
-              type="button"
-              className="btn btn-solid"
-              aria-label={`Buy ${durationLabel(pass.days)} of Pro`}
-              disabled={enabled !== true || busy !== null}
-              onClick={() => void buy(pass)}
-            >
-              {busy === pass.id ? 'One moment' : 'Buy'}
-            </button>
-          </li>
-        ))}
+              <p className="meta pass-month">{perMonth(amount, pass.days, currency)}</p>
+              <button
+                type="button"
+                className={best ? 'btn btn-solid' : 'btn'}
+                aria-label={`Buy ${durationLabel(pass.days)} of Pro`}
+                disabled={enabled !== true || busy !== null}
+                onClick={() => void buy(pass)}
+              >
+                {busy === pass.id ? 'One moment' : 'Buy'}
+              </button>
+            </li>
+          );
+        })}
       </ul>
 
+      {error && (
+        <p className="warn pass-status" role="alert">
+          {error}
+        </p>
+      )}
       {until && (
-        <p className="pass-status" role={paidUntil ? 'status' : undefined}>
+        <p className="pass-status" role="status">
           You’re Pro until {formatDate(until)}.
         </p>
       )}
 
       <div className="pass-notes">
-        <button type="button" className="text-btn" onClick={() => setCurrency(other)}>
-          Prices in {CURRENCY_SYMBOL[currency]} · Show in {CURRENCY_SYMBOL[other]}
-        </button>
-        <p className="meta">
-          Payments by Razorpay: UPI, cards, netbanking. Buying means you accept the{' '}
+        <p>Pay once, no subscription. Time adds up: buying again extends your Pro.</p>
+        <p>Razorpay takes UPI, cards and netbanking. Your statement shows SAMBIT NAYAK.</p>
+        <p>
           <Link to="terms" className="link">
-            terms
+            Terms
           </Link>
-          ; refunds within 7 days are covered by the{' '}
+          {' · '}
           <Link to="refunds" className="link">
-            refund policy
+            Refund policy
           </Link>
-          .
+          {' (7 days)'}
         </p>
-        <p className="meta">Time adds up: buying again extends your Pro.</p>
-        {enabled === false && <p className="meta">Payments open soon.</p>}
-        {error && (
-          <p className="warn" role="alert">
-            {error}
-          </p>
+        {enabled === false && <p>Payments open soon.</p>}
+        {INTERNATIONAL_PAYMENTS && (
+          <button
+            type="button"
+            className="text-btn"
+            onClick={() => {
+              storeCurrency(other);
+              setCurrency(other);
+            }}
+          >
+            Prices in {CURRENCY_SYMBOL[currency]} · Show in {CURRENCY_SYMBOL[other]}
+          </button>
         )}
       </div>
 

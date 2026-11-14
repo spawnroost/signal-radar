@@ -18,6 +18,13 @@ describe('parseRoute', () => {
     expect(parseRoute('').name).toBe('landing');
   });
 
+  it('maps the saved list, one saved page and the share target', () => {
+    expect(parseRoute('/saved').name).toBe('saved');
+    expect(parseRoute('/saved').savedId).toBeUndefined();
+    expect(parseRoute('/saved/abc-123/')).toMatchObject({ name: 'saved', savedId: 'abc-123' });
+    expect(parseRoute('/save', '?url=x').name).toBe('save');
+  });
+
   it('serves the landing page at /about without the returning-visitor redirect', () => {
     expect(parseRoute('/about')).toEqual({ name: 'landing', signup: false, about: true });
     expect(parseRoute('/').about).toBe(false);
@@ -37,6 +44,8 @@ describe('hrefFor', () => {
       'welcome',
       'read',
       'queue',
+      'saved',
+      'save',
       'settings',
       'pricing',
       'signin',

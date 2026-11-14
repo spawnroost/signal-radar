@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { CONTACT_EMAIL, LEGAL_NAME, LEGAL_PLACEHOLDER } from '../lib/legal';
+import { PRICE } from '../lib/tiers';
 import { Link } from './Link';
 
 function ContactLine() {
@@ -56,8 +57,8 @@ export function Terms() {
 
       <h3 className="sheet-h">Passes and payment</h3>
       <p>
-        Pro is a one-time pass: ₹99 or $2 for 30 days, ₹249 or $5 for 90 days, ₹799 or $15 for a
-        year. Razorpay takes the payment. There is no subscription and no auto-renew.
+        Pro is a one-time pass: {PRICE.allPasses}. Razorpay takes the payment. There is no
+        subscription and no auto-renew.
       </p>
       <p>
         Buying again adds the new days to the end of your current Pro time, or starts from today if

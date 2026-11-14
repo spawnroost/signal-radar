@@ -9,10 +9,14 @@ import { Contact, Privacy, Refunds, Terms } from './components/Legal';
 import { Link } from './components/Link';
 import { Pricing } from './components/Pricing';
 import { Queue } from './components/Queue';
+import { SaveTarget } from './components/SaveTarget';
+import { Saved } from './components/Saved';
+import { SavedReader } from './components/SavedReader';
 import { ReadView } from './components/ReadView';
 import { Settings } from './components/Settings';
 import { SignIn } from './components/SignIn';
 import { SignInSheet } from './components/SignInSheet';
+import { FormSkeleton, PageSkeleton } from './components/Skeletons';
 import { Welcome } from './components/Welcome';
 import { useInstallPrompt, useNow, useOnline, useRadarData } from './hooks';
 import { signOut } from './lib/auth';
@@ -32,6 +36,7 @@ import { endingSoonNote } from './lib/passes';
 import { importFlagKey, mergeServerConfig, shouldOfferImport } from './lib/prefsMerge';
 import { PAGE_META } from './lib/site';
 import { findTopicSubreddits } from './lib/topicItems';
+import { peekPendingSave } from './lib/saves';
 import { navigate, useRoute, type RouteName } from './lib/route';
 import type { SourceKind } from './lib/view';
 
@@ -52,6 +57,8 @@ const TITLES: Record<RouteName, string> = {
   welcome: 'Set up your radar · Signal Radar',
   read: 'Read · Signal Radar',
   queue: 'Ideas · Signal Radar',
+  saved: 'Saved · Signal Radar',
+  save: 'Save a link · Signal Radar',
   settings: 'Settings · Signal Radar',
   pricing: PAGE_META['/pricing'].title,
   signin: 'Sign in · Signal Radar',
@@ -129,6 +136,13 @@ export function App() {
       navigate(redirect, true);
     }
   }, [needsSetup, redirect, route.name]);
+  // A link shared while signed out is saved once the account is ready (also after sign-up).
+  useEffect(() => {
+    if (!userId || needsSetup || config === null) return;
+    if (route.name === 'save' || route.name === 'signin' || route.name === 'welcome') return;
+    const pending = peekPendingSave(localStorage);
+    if (pending) navigate(`/save?url=${encodeURIComponent(pending)}`, true);
+  }, [userId, needsSetup, config, route.name]);
   useEffect(() => {
     if (route.name !== 'queue') justOnboarded.set(false);
   }, [route.name]);
@@ -212,7 +226,12 @@ export function App() {
     }
     clearMe();
     clearConfig();
-    if (route.name === 'queue' || route.name === 'settings' || route.name === 'welcome') {
+    if (
+      route.name === 'queue' ||
+      route.name === 'saved' ||
+      route.name === 'settings' ||
+      route.name === 'welcome'
+    ) {
       navigate('/');
     }
   }, [route.name]);
@@ -270,9 +289,9 @@ export function App() {
             dark={stored.theme === 'system' ? null : dark}
           />
         ) : (
-          <p className="meta" aria-busy="true">
-            Loading
-          </p>
+          <div aria-busy="true">
+            <PageSkeleton />
+          </div>
         ))}
       {route.name === 'welcome' &&
         (me.status === 'ready' ? (
@@ -284,9 +303,9 @@ export function App() {
               localNiches={stored.niches}
             />
           ) : (
-            <p className="meta" aria-busy="true">
-              Loading your settings
-            </p>
+            <div aria-busy="true">
+              <FormSkeleton />
+            </div>
           )
         ) : (
           <Gate me={me} feature="welcome" />
@@ -314,6 +333,17 @@ export function App() {
         ) : (
           <Gate me={me} feature="queue" />
         ))}
+      {route.name === 'saved' &&
+        (me.status === 'ready' ? (
+          route.savedId ? (
+            <SavedReader id={route.savedId} />
+          ) : (
+            <Saved />
+          )
+        ) : (
+          <Gate me={me} feature="saved" />
+        ))}
+      {route.name === 'save' && <SaveTarget me={me} />}
       {route.name === 'settings' &&
         (me.status === 'ready' ? (
           <Settings me={me.me} defaults={defaults} />

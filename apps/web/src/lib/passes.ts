@@ -7,6 +7,30 @@ const DAY = 86_400_000;
 /** How many days before the end the app says Pro is ending. */
 const ENDING_SOON_DAYS = 3;
 
+const CURRENCY_KEY = 'radar.currency';
+
+/** Whether the build offers USD at all (`internationalPayments` in radar.config.ts). */
+export const INTERNATIONAL_PAYMENTS =
+  typeof __RADAR_INTL_PAYMENTS__ === 'boolean' ? __RADAR_INTL_PAYMENTS__ : false;
+
+/** INR, unless USD is on offer and the visitor picked it earlier. No locale or geo guessing. */
+export function storedCurrency(international = INTERNATIONAL_PAYMENTS): Currency {
+  if (!international) return 'INR';
+  try {
+    return localStorage.getItem(CURRENCY_KEY) === 'USD' ? 'USD' : 'INR';
+  } catch {
+    return 'INR';
+  }
+}
+
+export function storeCurrency(currency: Currency): void {
+  try {
+    localStorage.setItem(CURRENCY_KEY, currency);
+  } catch {
+    /* private mode: the choice just lasts this visit */
+  }
+}
+
 export const CURRENCY_SYMBOL: Record<Currency, string> = { INR: '₹', USD: '$' };
 
 /** Money from an amount in minor units (paise or cents): ₹99, $2, $1.25. */

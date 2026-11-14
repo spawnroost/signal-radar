@@ -170,6 +170,8 @@ export const RadarConfigSchema = z.object({
   legalName: z.string().default('TODO'),
   /** Contact email shown on the policy pages. */
   contactEmail: z.string().default('TODO'),
+  /** Accept USD (and show the currency toggle). While false, everything is INR only. */
+  internationalPayments: z.boolean().default(false),
   niches: z.array(NicheSchema).min(1),
   sources: z.array(SourceConfigSchema),
   /** Base URL of an RSSHub instance, e.g. http://localhost:1200. Unset = rsshub sources disabled. */

@@ -3,6 +3,7 @@ import type { Niche, ScoredItem } from '@radar/core/ranking';
 import { metaParts, PAGE_SIZE, showMore } from '../lib/view';
 import { META_SEP } from '../lib/format';
 import { ItemActions } from './ItemActions';
+import { ListSkeleton } from './Skeletons';
 
 interface Props {
   items: ScoredItem[];
@@ -74,18 +75,7 @@ export function ItemList({ items, niches, now, saveable = false, paged = false, 
   );
 }
 
-export function Skeleton({ count = 7 }: { count?: number }) {
-  return (
-    <ol className="items" aria-hidden="true">
-      {Array.from({ length: count }, (_, i) => (
-        <li key={i} className="item skeleton">
-          <span className="rank">{i + 1}</span>
-          <div className="item-body">
-            <div className="bar" style={{ width: `${88 - ((i * 13) % 30)}%` }} />
-            <div className="bar short" style={{ width: `${40 + ((i * 17) % 25)}%` }} />
-          </div>
-        </li>
-      ))}
-    </ol>
-  );
+/** The Read feed's loading rows. Pre-rendered pages pass `delay={false}`: they carry it from the start. */
+export function Skeleton({ count = 7, delay = true }: { count?: number; delay?: boolean }) {
+  return <ListSkeleton count={count} numbered delay={delay} />;
 }

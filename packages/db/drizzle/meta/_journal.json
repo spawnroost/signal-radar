@@ -64,6 +64,13 @@
       "when": 1794320726609,
       "tag": "0008_big_rick_jones",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1794628956741,
+      "tag": "0009_brief_rawhide_kid",
+      "breakpoints": true
     }
   ]
 }

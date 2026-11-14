@@ -237,6 +237,37 @@ export const queueItem = pgTable(
   ],
 );
 
+/** A link the user saved to read later (the "Saved" list). `content` is sanitized HTML. */
+export const savedItem = pgTable(
+  'saved_item',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    url: text('url').notNull(),
+    /** Canonical form of the URL (see canonicalUrl); one save per user per page. */
+    urlNormalized: text('url_normalized').notNull(),
+    title: text('title').notNull(),
+    siteName: text('site_name'),
+    excerpt: text('excerpt'),
+    imageUrl: text('image_url'),
+    content: text('content'),
+    wordCount: integer('word_count').notNull().default(0),
+    tags: text('tags')
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
+    archivedAt: timestamp('archived_at', { withTimezone: true }),
+    favorite: boolean('favorite').notNull().default(false),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    uniqueIndex('saved_item_user_url_uq').on(t.userId, t.urlNormalized),
+    index('saved_item_user_created_idx').on(t.userId, t.createdAt),
+  ],
+);
+
 export type PageSummaryStatus = 'ok' | 'unreadable';
 
 /** Shared cache of on-demand page summaries, keyed by cleaned URL (same for every user). */

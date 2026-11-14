@@ -11,6 +11,7 @@ const here = fileURLToPath(new URL('.', import.meta.url));
 const legalDefine = {
   __RADAR_LEGAL_NAME__: JSON.stringify(radarConfig.legalName),
   __RADAR_LEGAL_EMAIL__: JSON.stringify(radarConfig.contactEmail),
+  __RADAR_INTL_PAYMENTS__: JSON.stringify(radarConfig.internationalPayments),
 };
 
 export default defineConfig(({ mode }) => {
@@ -35,6 +36,12 @@ export default defineConfig(({ mode }) => {
           description: 'A ranked radar of what is moving in the niches you follow.',
           start_url: '/read',
           scope: '/',
+          // The share sheet opens /save?url=…&text=…&title=…, which saves the link.
+          share_target: {
+            action: '/save',
+            method: 'GET',
+            params: { url: 'url', text: 'text', title: 'title' },
+          },
           display: 'standalone',
           background_color: '#f7f7f4',
           theme_color: '#f7f7f4',
@@ -58,7 +65,7 @@ export default defineConfig(({ mode }) => {
             {
               // Session, account, queue and billing data is per user and must never come from a cache.
               urlPattern: ({ url }) =>
-                /^\/api\/(me|queue|auth|billing|push|telegram)(\/|$)/.test(url.pathname),
+                /^\/api\/(me|queue|saves|auth|billing|push|telegram)(\/|$)/.test(url.pathname),
               handler: 'NetworkOnly',
             },
             {

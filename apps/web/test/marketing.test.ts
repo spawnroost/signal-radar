@@ -24,9 +24,10 @@ describe('tier data', () => {
     for (const f of [...FREE_FEATURES, ...PRO_FEATURES]) expect(landing).toContain(f);
     for (const f of [...FREE_SHORT, ...PRO_SHORT]) expect(pricing).toContain(f);
     expect(landing).toContain(PRICE.pro);
-    // Pricing draws the dollar prices before the server says which currency applies.
-    expect(pricing).toContain('$2');
-    expect(pricing).toContain('$15');
+    // Rupees by default for everyone; dollars only when the visitor picks them.
+    expect(pricing).toContain('₹99');
+    expect(pricing).toContain('₹799');
+    expect(pricing).not.toContain('$');
   });
 
   it('gives the landing page one h1', () => {
@@ -50,7 +51,7 @@ describe('page head helpers', () => {
     expect(out).toContain('<title>Pricing · Signal Radar</title>');
     expect(out).toContain('rel="canonical" href="https://a.test/pricing"');
     expect(out).toContain('property="og:url" content="https://a.test/pricing"');
-    expect(out).toMatch(/property="og:description" content="Free keeps[^"]*\$2 for 30 days/);
+    expect(out).toMatch(/property="og:description" content="Free keeps[^"]*₹99 for 30 days/);
   });
 
   it('fills #root and tags it with the route', () => {

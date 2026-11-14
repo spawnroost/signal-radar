@@ -1,17 +1,18 @@
 import { Link } from './Link';
 import type { MeState } from '../lib/me';
+import { PageSkeleton } from './Skeletons';
 
 interface Props {
   me: MeState;
   /** What the signed-out visitor needs: queue or settings. */
-  feature: 'queue' | 'settings' | 'welcome';
+  feature: 'queue' | 'saved' | 'settings' | 'welcome';
 }
 
 export function Gate({ me, feature }: Props) {
   if (me.status === 'loading') {
     return (
       <div className="state" aria-busy="true">
-        <p className="meta">Checking your session</p>
+        <PageSkeleton />
       </div>
     );
   }
@@ -31,6 +32,26 @@ export function Gate({ me, feature }: Props) {
         <h2 className="state-title">Set up your radar after you sign in</h2>
         <p>
           Create a free account to pick your niches and feeds. Pro is free for the first 7 days.
+        </p>
+        <div className="auth-actions">
+          <Link to="signin" signup className="btn btn-solid">
+            Create an account
+          </Link>
+          <Link to="signin" className="link">
+            Sign in
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (feature === 'saved') {
+    return (
+      <div className="state">
+        <h2 className="state-title">Saved lives with your account</h2>
+        <p>
+          Sign in to keep links to read later, in a clean reader view you can tag, archive and
+          summarize.
         </p>
         <div className="auth-actions">
           <Link to="signin" signup className="btn btn-solid">

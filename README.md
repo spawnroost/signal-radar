@@ -59,9 +59,8 @@ The web dev server proxies `/api` to the API, so run both. Sign up in the browse
 To fill that user's queue, run `pnpm radar run`. With no `DEEPSEEK_API_KEY` it uses the `none` provider, so you get
 keyword-ranked items without hooks.
 
-Payments are stubbed (`PAYMENTS_PROVIDER=stub`): the upgrade button on the Pricing page flips the account to Pro.
-Lemon Squeezy is not wired up yet. In the meantime, `pnpm radar user:pro --email you@example.com` makes a user Pro from
-the command line.
+Payments use Razorpay prepaid passes. Without Razorpay keys, the Buy buttons are hidden and payments are closed.
+To make a user Pro locally, use `pnpm radar user:pro --email you@example.com`.
 
 Checks:
 
@@ -81,29 +80,36 @@ which is not a dependency).
 Sources, default niches, the scoring provider and `topN` are in `radar.config.ts`. Everything else is environment
 variables, read from `.env` by the API and the CLI.
 
-| Variable                      | Purpose                                                                                                  |
-| ----------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `TELEGRAM_BOT_TOKEN`          | Telegram bot token. Used for the per-user digest and for single-user `--local` mode.                     |
-| `TELEGRAM_CHAT_ID`            | Chat that receives the digest in `radar run --local` mode.                                               |
-| `DEEPSEEK_API_KEY`            | Enables the DeepSeek scorer. Missing: falls back to `none`.                                              |
-| `NOTION_TOKEN`                | Notion integration token for `radar run --local`.                                                        |
-| `DATABASE_URL`                | Postgres connection string. Required by the API and by `radar run`.                                      |
-| `TEST_DATABASE_URL`           | Database the test suite resets and writes to. Keep it separate from `DATABASE_URL`.                      |
-| `BETTER_AUTH_SECRET`          | Session signing secret, 32 characters or more.                                                           |
-| `BETTER_AUTH_URL`             | Public base URL of the API.                                                                              |
-| `WEB_ORIGIN`                  | Origin of the web app, for CORS and cookies. `http://localhost:5173` in dev.                             |
-| `API_PORT`                    | Port the API listens on.                                                                                 |
-| `LEMONSQUEEZY_WEBHOOK_SECRET` | Signing secret for the Lemon Squeezy webhook.                                                            |
-| `VAPID_PUBLIC_KEY`            | Web Push public key. Generate a pair with `pnpm --filter @radar/core exec web-push generate-vapid-keys`. |
-| `VAPID_PRIVATE_KEY`           | Web Push private key. With the other VAPID vars unset, push is disabled.                                 |
-| `VAPID_SUBJECT`               | `mailto:` contact sent to push services.                                                                 |
-| `YOUTUBE_API_KEY`             | YouTube Data API v3 key (server-side only). Unset: YouTube is left out of search.                        |
-| `TELEGRAM_BOT_USERNAME`       | Bot username without the `@`. Needed for the Connect Telegram link; unset hides the button.              |
-| `TELEGRAM_WEBHOOK_SECRET`     | Secret the bot webhook must present. Unset: the webhook returns 404.                                     |
-| `VITE_SITE_URL`               | Web origin for canonical and share URLs, sitemap and robots at build. Default `localhost:5173`.          |
+| Variable                  | Purpose                                                                                                   |
+| ------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `TELEGRAM_BOT_TOKEN`      | Telegram bot token. Used for the per-user digest and for single-user `--local` mode.                      |
+| `TELEGRAM_CHAT_ID`        | Chat that receives the digest in `radar run --local` mode.                                                |
+| `DEEPSEEK_API_KEY`        | Enables the DeepSeek scorer. Missing: falls back to `none`.                                               |
+| `NOTION_TOKEN`            | Notion integration token for `radar run --local`.                                                         |
+| `DATABASE_URL`            | Postgres connection string. Required by the API and by `radar run`.                                       |
+| `TEST_DATABASE_URL`       | Database the test suite resets and writes to. Keep it separate from `DATABASE_URL`.                       |
+| `BETTER_AUTH_SECRET`      | Session signing secret, 32 characters or more.                                                            |
+| `BETTER_AUTH_URL`         | Public base URL of the API.                                                                               |
+| `WEB_ORIGIN`              | Origin of the web app, for CORS and cookies. `http://localhost:5173` in dev.                              |
+| `GOOGLE_CLIENT_ID`        | Google sign-in (with `GOOGLE_CLIENT_SECRET`). Callback URL: `<BETTER_AUTH_URL>/api/auth/callback/google`. |
+| `GOOGLE_CLIENT_SECRET`    | See above. Both unset: Google sign-in is off.                                                             |
+| `GITHUB_CLIENT_ID`        | GitHub sign-in (with `GITHUB_CLIENT_SECRET`). Callback URL: `<BETTER_AUTH_URL>/api/auth/callback/github`. |
+| `GITHUB_CLIENT_SECRET`    | See above. Both unset: GitHub sign-in is off.                                                             |
+| `API_PORT`                | Port the API listens on.                                                                                  |
+| `VAPID_PUBLIC_KEY`        | Web Push public key. Generate a pair with `pnpm --filter @radar/core exec web-push generate-vapid-keys`.  |
+| `VAPID_PRIVATE_KEY`       | Web Push private key. With the other VAPID vars unset, push is disabled.                                  |
+| `VAPID_SUBJECT`           | `mailto:` contact sent to push services.                                                                  |
+| `YOUTUBE_API_KEY`         | YouTube Data API v3 key (server-side only). Unset: YouTube is left out of search.                         |
+| `TELEGRAM_BOT_USERNAME`   | Bot username without the `@`. Needed for the Connect Telegram link; unset hides the button.               |
+| `TELEGRAM_WEBHOOK_SECRET` | Secret the bot webhook must present. Unset: the webhook returns 404.                                      |
+| `VITE_SITE_URL`           | Web origin for canonical and share URLs, sitemap and robots at build. Default `localhost:5173`.           |
+
+Sign-in: with no Google or GitHub keys, email + password is the sign-in. As soon as one provider is configured,
+email + password is switched off in production (it stays in development and tests, behind a "Use email (dev only)"
+toggle).
 
 Also read, but not in `.env.example`: `ANTHROPIC_API_KEY` (when `provider: 'anthropic'`), `GITHUB_TOKEN` (higher GitHub
-rate limit), `PAYMENTS_PROVIDER` (`stub` or `lemonsqueezy`, default `stub`) and `NOTION_DB_ID` (`--local` mode).
+rate limit) and `NOTION_DB_ID` (`--local` mode).
 
 ### Telegram connect
 
@@ -154,13 +160,11 @@ pnpm radar telegram:webhook --delete          remove the bot webhook
 ## Self-hosting
 
 Nothing in it depends on a particular host: Postgres, a Node process for the API, static files for the web app, and
-something to run `radar run` on a schedule (cron, a systemd timer, GitHub Actions). A single VPS with Docker works. Put a
-reverse proxy in front that serves the built web app from `apps/web/dist` (with a fallback to `index.html` for client
-routes) and forwards `/api` to the API. There is no Dockerfile in the repo yet; `docker-compose.yml` only runs Postgres
-(and an optional RSSHub, `docker compose --profile rsshub up -d rsshub`).
-
-The existing `.github/workflows/radar.yml` still targets the old single-user flow and needs updating before you rely on
-it.
+something to run `radar run` on a schedule. `Dockerfile` (targets `api`, `web`, `tools`) and `deploy/` hold a
+ready-made Docker Compose stack (Postgres, migrations, API, web, and a cron container that runs `radar run` at 03:00 and
+15:00 UTC plus a nightly backup). `deploy/README.md` is the runbook: first deploy, update, rollback, logs, CLI
+commands, DB tunnel and restore. `docker-compose.yml` at the root is only for local development (Postgres and an
+optional RSSHub, `docker compose --profile rsshub up -d rsshub`).
 
 ## Layout
 

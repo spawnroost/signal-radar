@@ -12,18 +12,36 @@ export const dbAvailable = await testDbAvailable();
 export async function setup(
   overrides: Record<string, string | undefined> = {},
   net?: AppDeps['net'],
+  extra: Pick<AppDeps, 'internationalPayments'> = {},
 ) {
   const db: Db = await openTestDb();
   const env = parseEnv({
     BETTER_AUTH_SECRET: 'test-secret-test-secret-test-secret-1234',
     BETTER_AUTH_URL: 'http://localhost:8787',
     WEB_ORIGIN,
-    LEMONSQUEEZY_WEBHOOK_SECRET: WEBHOOK_SECRET,
     NODE_ENV: 'test',
     ...overrides,
   });
-  const app = createApp({ db, env, ...(net ? { net } : {}) });
+  const app = createApp({ db, env, ...(net ? { net } : {}), ...extra });
   return { db, app, reset: () => resetTestDb(db), close: () => db.$client.end({ timeout: 1 }) };
+}
+
+/**
+ * A second app on the same database with NODE_ENV=production. Production has no email sign-up,
+ * so create users through the normal app and use their cookies here.
+ */
+export function productionApp(
+  base: { db: Db },
+  overrides: Record<string, string | undefined> = {},
+): TestApp {
+  const env = parseEnv({
+    BETTER_AUTH_SECRET: 'test-secret-test-secret-test-secret-1234',
+    BETTER_AUTH_URL: 'http://localhost:8787',
+    WEB_ORIGIN,
+    NODE_ENV: 'production',
+    ...overrides,
+  });
+  return createApp({ db: base.db, env });
 }
 
 export type TestApp = Awaited<ReturnType<typeof setup>>['app'];

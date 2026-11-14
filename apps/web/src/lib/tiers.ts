@@ -1,11 +1,23 @@
 /** What Free and Pro include. The Pricing page and the landing page both render these. */
+import { INTERNATIONAL_PAYMENTS } from './passes';
 
+const INTL = INTERNATIONAL_PAYMENTS;
+
+/** Prices in marketing copy: rupees only until `internationalPayments` is on in radar.config.ts. */
 export const PRICE = {
-  free: '$0',
-  pro: '$2',
+  free: INTL ? '$0' : '₹0',
+  pro: INTL ? '$2' : '₹99',
   proPeriod: ' for 30 days',
-  passLine: '$2 for 30 days, or ₹99 in India',
+  passLine: INTL ? '$2 for 30 days, or ₹99 in India' : '₹99 for 30 days',
   passNote: 'Pay once. Time adds up: buying again adds days to the end.',
+  /** The three passes in one sentence fragment, for the FAQ and the terms. */
+  allPasses: INTL
+    ? '₹99 or $2 for 30 days, ₹249 or $5 for 90 days, ₹799 or $15 for a year'
+    : '₹99 for 30 days, ₹249 for 90 days, ₹799 for a year',
+  /** The line under the Pro price on the landing page. */
+  proMore: INTL
+    ? '₹99 in India. Also $5 for 90 days, $15 for a year.'
+    : 'Also ₹249 for 90 days, ₹799 for a year.',
 } as const;
 
 export const FREE_FEATURES: readonly string[] = [

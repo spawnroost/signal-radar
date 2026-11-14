@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm';
 import { customFeedId } from '@radar/core';
 import { schema } from '@radar/db';
 import radarConfig from '../../../radar.config.js';
-import { call, dbAvailable, setup, sign, signUp, type Json } from './helpers.js';
+import { call, dbAvailable, productionApp, setup, signUp, type Json } from './helpers.js';
 
 const RSS = `<?xml version="1.0"?><rss version="2.0"><channel><title>Space Weekly</title>
 <item><title>Artemis slips</title><link>https://space.example/a</link></item>
@@ -105,6 +105,12 @@ describe.skipIf(!dbAvailable)('api', () => {
       const missing = await call(ctx.app, '/nope');
       expect(missing.status).toBe(404);
       expect(await missing.json()).toEqual({ error: 'not found' });
+    });
+
+    it('serves /api/health with a database ping', async () => {
+      const res = await call(ctx.app, '/api/health');
+      expect(res.status).toBe(200);
+      expect(await res.json()).toEqual({ ok: true });
     });
 
     it('sends CORS headers for WEB_ORIGIN with credentials', async () => {
@@ -972,47 +978,27 @@ describe.skipIf(!dbAvailable)('api', () => {
         await ctx.db.select().from(schema.subscription).where(eq(schema.subscription.userId, id))
       )[0];
 
-    it('checkout upgrades to pro/active and works in production', async () => {
-      const prod = await setup({ NODE_ENV: 'production' });
-      try {
-        const u = await signUp(prod.app, 'a@example.com');
-        await prod.db
-          .update(schema.subscription)
-          .set({ status: 'none', plan: 'free', trialEndsAt: null })
-          .where(eq(schema.subscription.userId, u.id));
-        expect(await proOf(prod.app, u)).toBe(false);
-        const res = await call(prod.app, '/api/billing/checkout', { method: 'POST', user: u });
-        expect(res.status).toBe(200);
-        expect(await res.json()).toEqual({ url: null, upgraded: true });
-        expect(await proOf(prod.app, u)).toBe(true);
-      } finally {
-        await prod.close();
-      }
+    it('checkout upgrades to pro/active outside production', async () => {
+      const u = await signUp(ctx.app, 'a@example.com');
+      await ctx.db
+        .update(schema.subscription)
+        .set({ status: 'none', plan: 'free', trialEndsAt: null })
+        .where(eq(schema.subscription.userId, u.id));
+      expect(await proOf(ctx.app, u)).toBe(false);
+      const res = await call(ctx.app, '/api/billing/checkout', { method: 'POST', user: u });
+      expect(res.status).toBe(200);
+      expect(await res.json()).toEqual({ url: null, upgraded: true });
+      expect(await proOf(ctx.app, u)).toBe(true);
     });
 
-    it('refuses the free stub checkout in production once Razorpay is set up', async () => {
-      const prod = await setup({
-        NODE_ENV: 'production',
-        RAZORPAY_KEY_ID: 'rzp_test_x',
-        RAZORPAY_KEY_SECRET: 'secret',
-      });
-      try {
-        const u = await signUp(prod.app, 'b@example.com');
-        const res = await call(prod.app, '/api/billing/checkout', { method: 'POST', user: u });
-        expect(res.status).toBe(501);
-      } finally {
-        await prod.close();
-      }
-    });
-
-    it('checkout returns 501 for the lemonsqueezy provider', async () => {
-      const ls = await setup({ PAYMENTS_PROVIDER: 'lemonsqueezy' });
-      try {
-        const u = await signUp(ls.app, 'a@example.com');
-        const res = await call(ls.app, '/api/billing/checkout', { method: 'POST', user: u });
-        expect(res.status).toBe(501);
-      } finally {
-        await ls.close();
+    it('refuses the free stub checkout and cancel in production, with or without Razorpay', async () => {
+      const u = await signUp(ctx.app, 'b@example.com');
+      for (const keys of [{}, { RAZORPAY_KEY_ID: 'rzp_test_x', RAZORPAY_KEY_SECRET: 'secret' }]) {
+        const prod = productionApp(ctx, keys);
+        for (const path of ['/api/billing/checkout', '/api/billing/cancel']) {
+          const res = await call(prod, path, { method: 'POST', user: u });
+          expect(res.status).toBe(501);
+        }
       }
     });
 
@@ -1039,103 +1025,6 @@ describe.skipIf(!dbAvailable)('api', () => {
       const u = await signUp(ctx.app, 'a@example.com');
       const res = await call(ctx.app, '/api/billing/cancel', { method: 'POST', user: u });
       expect(res.status).toBe(409);
-    });
-  });
-
-  describe('lemonsqueezy webhook', () => {
-    const payload = (
-      event: string,
-      userId: string | undefined,
-      attrs: Record<string, unknown> = {},
-    ) =>
-      JSON.stringify({
-        meta: { event_name: event, custom_data: userId ? { user_id: userId } : {} },
-        data: { id: '987', attributes: { status: 'active', customer_id: 555, ...attrs } },
-      });
-    const post = (body: string, signature?: string) =>
-      ctx.app.request('/api/webhooks/lemonsqueezy', {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          ...(signature ? { 'x-signature': signature } : {}),
-        },
-        body,
-      });
-
-    it('rejects missing or wrong signatures', async () => {
-      const u = await signUp(ctx.app, 'a@example.com');
-      const body = payload('subscription_created', u.id);
-      expect((await post(body)).status).toBe(401);
-      expect((await post(body, 'deadbeef')).status).toBe(401);
-      expect((await post(body, sign(body, 'another-secret'))).status).toBe(401);
-      const [sub] = await ctx.db
-        .select()
-        .from(schema.subscription)
-        .where(eq(schema.subscription.userId, u.id));
-      expect(sub?.provider).toBe('stub');
-    });
-
-    it('upserts the subscription on subscription_created', async () => {
-      const u = await signUp(ctx.app, 'a@example.com');
-      const body = payload('subscription_created', u.id, { renews_at: '2030-01-01T00:00:00.000Z' });
-      const res = await post(body, sign(body));
-      expect(res.status).toBe(200);
-      const [sub] = await ctx.db
-        .select()
-        .from(schema.subscription)
-        .where(eq(schema.subscription.userId, u.id));
-      expect(sub).toMatchObject({
-        plan: 'pro',
-        status: 'active',
-        provider: 'lemonsqueezy',
-        providerCustomerId: '555',
-        providerSubscriptionId: '987',
-      });
-      expect(sub?.currentPeriodEnd?.toISOString()).toBe('2030-01-01T00:00:00.000Z');
-      expect(await ctx.db.select().from(schema.subscription)).toHaveLength(1);
-    });
-
-    it('creates a subscription row when none exists', async () => {
-      const u = await signUp(ctx.app, 'a@example.com');
-      await ctx.db.delete(schema.subscription).where(eq(schema.subscription.userId, u.id));
-      const body = payload('subscription_updated', u.id, {
-        status: 'on_trial',
-        trial_ends_at: '2030-02-01T00:00:00Z',
-      });
-      expect((await post(body, sign(body))).status).toBe(200);
-      const [sub] = await ctx.db
-        .select()
-        .from(schema.subscription)
-        .where(eq(schema.subscription.userId, u.id));
-      expect(sub).toMatchObject({ plan: 'pro', status: 'trialing' });
-    });
-
-    it('downgrades on cancelled and expired', async () => {
-      const u = await signUp(ctx.app, 'a@example.com');
-      for (const event of ['subscription_cancelled', 'subscription_expired']) {
-        const body = payload(event, u.id, {
-          status: event === 'subscription_cancelled' ? 'cancelled' : 'expired',
-          ends_at: '2030-01-01T00:00:00Z',
-        });
-        expect((await post(body, sign(body))).status).toBe(200);
-        const [sub] = await ctx.db
-          .select()
-          .from(schema.subscription)
-          .where(eq(schema.subscription.userId, u.id));
-        expect(sub).toMatchObject({ plan: 'free', status: 'canceled' });
-      }
-      expect(await proOf(ctx.app, u)).toBe(false);
-    });
-
-    it('400s without a user id, 404s for an unknown user, ignores other events', async () => {
-      const noUser = payload('subscription_created', undefined);
-      expect((await post(noUser, sign(noUser))).status).toBe(400);
-      const ghost = payload('subscription_created', 'no-such-user');
-      expect((await post(ghost, sign(ghost))).status).toBe(404);
-      const other = payload('order_created', 'whoever');
-      const res = await post(other, sign(other));
-      expect(res.status).toBe(200);
-      expect(await res.json()).toEqual({ ok: true, ignored: true });
     });
   });
 

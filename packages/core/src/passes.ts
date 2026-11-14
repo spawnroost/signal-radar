@@ -20,20 +20,6 @@ export const PASSES: readonly Pass[] = [
 
 const DAY_MS = 86_400_000;
 
-/**
- * INR for India, USD everywhere else. Country comes from Cloudflare's `CF-IPCountry`;
- * when it is missing, an `Accept-Language` naming an Indian English variant counts as India.
- */
-export function currencyFor(
-  country: string | null | undefined,
-  acceptLanguage: string | null | undefined,
-): Currency {
-  // A country header wins when present; Accept-Language is only the fallback.
-  if (country) return country.toUpperCase() === 'IN' ? 'INR' : 'USD';
-  if (acceptLanguage && /(?:^|[,;\s])[a-z]{2}-IN\b/i.test(acceptLanguage)) return 'INR';
-  return 'USD';
-}
-
 /** ₹99 / $2; amounts are in paise/cents and prices are always whole units. */
 export function formatPrice(pass: Pass, currency: Currency): string {
   const amount = currency === 'INR' ? pass.inr : pass.usd;

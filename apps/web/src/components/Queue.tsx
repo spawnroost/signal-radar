@@ -16,6 +16,7 @@ import {
   type QueueStatus,
 } from '../lib/queue';
 import { QueueRow } from './QueueRow';
+import { ListSkeleton } from './Skeletons';
 import { Tabs } from './Tabs';
 
 const STATUSES: QueueStatus[] = ['new', 'picked', 'skipped'];
@@ -323,19 +324,7 @@ export function Queue({ isPro }: { isPro: boolean }) {
         aria-labelledby={`qstatus-${status}`}
         className="qpanel"
       >
-        {load === 'loading' && (
-          <ol className="items" aria-hidden="true">
-            {Array.from({ length: 4 }, (_, i) => (
-              <li key={i} className="qrow skeleton">
-                <span className="rank" />
-                <div className="item-body">
-                  <div className="bar" style={{ width: `${86 - i * 11}%` }} />
-                  <div className="bar short" style={{ width: `${44 + i * 6}%` }} />
-                </div>
-              </li>
-            ))}
-          </ol>
-        )}
+        {load === 'loading' && <ListSkeleton kind="qrow" />}
 
         {load === 'error' && (
           <div className="state" role="alert">

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ApiError } from '../src/lib/api';
-import { authErrorMessage } from '../src/lib/auth';
+import { authErrorMessage, enabledProviders } from '../src/lib/auth';
 
 describe('authErrorMessage', () => {
   it('names the problem and the way out', () => {
@@ -13,5 +13,14 @@ describe('authErrorMessage', () => {
       authErrorMessage(new ApiError(400, 'Password too short', 'PASSWORD_TOO_SHORT'), 'signup'),
     ).toMatch(/8 characters/);
     expect(authErrorMessage(new Error('boom'), 'signin')).toMatch(/Try again/);
+  });
+});
+
+describe('enabledProviders', () => {
+  const base = { google: false, github: false, email: true, emailPrimary: false };
+  it('lists switched-on providers in display order', () => {
+    expect(enabledProviders({ ...base, google: true, github: true })).toEqual(['google', 'github']);
+    expect(enabledProviders({ ...base, github: true })).toEqual(['github']);
+    expect(enabledProviders({ ...base, emailPrimary: true })).toEqual([]);
   });
 });

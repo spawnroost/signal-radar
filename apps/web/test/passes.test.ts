@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   daysLeft,
   durationLabel,
@@ -6,6 +6,8 @@ import {
   formatMoney,
   perMonth,
   proUntilNote,
+  storeCurrency,
+  storedCurrency,
 } from '../src/lib/passes';
 
 const NOW = Date.parse('2026-11-09T12:00:00Z');
@@ -53,5 +55,31 @@ describe('a pass about to end', () => {
     expect(endingSoonNote('2026-11-09T12:00:00Z', NOW)).toBe('Pro ends today.');
     expect(endingSoonNote('2026-11-13T12:00:00Z', NOW)).toBe('');
     expect(endingSoonNote(null, NOW)).toBe('');
+  });
+});
+
+describe('remembered currency', () => {
+  afterEach(() => vi.unstubAllGlobals());
+  const stubStorage = () => {
+    const data = new Map<string, string>();
+    vi.stubGlobal('localStorage', {
+      getItem: (k: string) => data.get(k) ?? null,
+      setItem: (k: string, v: string) => void data.set(k, v),
+    });
+  };
+
+  it('is INR by default and when storage is unavailable', () => {
+    expect(storedCurrency(true)).toBe('INR');
+    stubStorage();
+    expect(storedCurrency(true)).toBe('INR');
+  });
+
+  it('remembers a USD choice only while international payments are on', () => {
+    stubStorage();
+    storeCurrency('USD');
+    expect(storedCurrency(true)).toBe('USD');
+    expect(storedCurrency(false)).toBe('INR');
+    storeCurrency('INR');
+    expect(storedCurrency(true)).toBe('INR');
   });
 });

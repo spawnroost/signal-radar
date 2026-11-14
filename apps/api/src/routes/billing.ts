@@ -3,12 +3,13 @@ import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
-import { createFetch, formatPrice, currencyFor, PASSES, type Currency } from '@radar/core';
+import { createFetch, formatPrice, PASSES, type Currency } from '@radar/core';
 import { grantPass, schema } from '@radar/db';
 import type { AppVars, RouteDeps } from '../app.js';
 import type { ApiEnv } from '../env.js';
 import { parseBody } from '../http.js';
 import { requireAuth } from '../middleware.js';
+import radarConfig from '../../../../radar.config.js';
 import { createLimiter } from './search.js';
 
 export const ORDERS_PER_MINUTE = 10;
@@ -64,6 +65,7 @@ function amountFor(pass: (typeof PASSES)[number], currency: Currency): number {
 /** Billing endpoints: prepaid Razorpay passes, plus the older stub checkout for local use. */
 export function billingRoutes(deps: RouteDeps) {
   const { db, env } = deps;
+  const international = deps.internationalPayments ?? radarConfig.internationalPayments;
   const r = new Hono<AppVars>();
   const allowOrder = createLimiter(ORDERS_PER_MINUTE);
 
@@ -73,13 +75,12 @@ export function billingRoutes(deps: RouteDeps) {
   r.use('/verify', requireAuth(deps));
 
   r.get('/passes', (c) => {
-    const requested = c.req.query('currency')?.toUpperCase();
+    // INR unless the visitor picked USD and international payments are on.
     const currency: Currency =
-      requested === 'INR' || requested === 'USD'
-        ? requested
-        : currencyFor(c.req.header('cf-ipcountry'), c.req.header('accept-language'));
+      international && c.req.query('currency')?.toUpperCase() === 'USD' ? 'USD' : 'INR';
     return c.json({
       currency,
+      international,
       passes: PASSES.map((pass) => ({
         id: pass.id,
         days: pass.days,
@@ -100,6 +101,9 @@ export function billingRoutes(deps: RouteDeps) {
     }
 
     const { passId, currency } = await parseBody(c, OrderBody);
+    if (currency === 'USD' && !international) {
+      throw new HTTPException(400, { message: 'Only INR payments are available right now' });
+    }
     const pass = PASSES.find((p) => p.id === passId);
     if (!pass) throw new HTTPException(400, { message: 'unknown pass' });
     const amount = amountFor(pass, currency);
@@ -212,11 +216,8 @@ export function billingRoutes(deps: RouteDeps) {
   });
 
   r.post('/checkout', async (c) => {
-    // The stub grants Pro for free: once real payments exist it must not run in production.
-    if (
-      env.PAYMENTS_PROVIDER !== 'stub' ||
-      (env.NODE_ENV === 'production' && razorpayKeys(env) !== null)
-    ) {
+    // The stub grants Pro for free: it must never run in production, with or without Razorpay keys.
+    if (env.NODE_ENV === 'production') {
       throw new HTTPException(501, { message: 'checkout not implemented for this provider' });
     }
     const userId = c.get('user').id;
@@ -234,11 +235,8 @@ export function billingRoutes(deps: RouteDeps) {
   });
 
   r.post('/cancel', async (c) => {
-    // The stub grants Pro for free: once real payments exist it must not run in production.
-    if (
-      env.PAYMENTS_PROVIDER !== 'stub' ||
-      (env.NODE_ENV === 'production' && razorpayKeys(env) !== null)
-    ) {
+    // The stub grants Pro for free: it must never run in production, with or without Razorpay keys.
+    if (env.NODE_ENV === 'production') {
       throw new HTTPException(501, { message: 'cancel not implemented for this provider' });
     }
     const userId = c.get('user').id;

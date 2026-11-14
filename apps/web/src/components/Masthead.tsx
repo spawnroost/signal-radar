@@ -15,6 +15,7 @@ interface Props {
 const NAV: { to: RouteName; label: string }[] = [
   { to: 'read', label: 'Read' },
   { to: 'queue', label: 'Ideas' },
+  { to: 'saved', label: 'Saved' },
   { to: 'pricing', label: 'Pricing' },
 ];
 

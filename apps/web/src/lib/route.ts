@@ -5,6 +5,8 @@ export type RouteName =
   | 'welcome'
   | 'read'
   | 'queue'
+  | 'saved'
+  | 'save'
   | 'settings'
   | 'pricing'
   | 'signin'
@@ -17,6 +19,8 @@ export interface Route {
   name: RouteName;
   /** `/signin?mode=signup` opens the sign-in screen on its "create account" side. */
   signup: boolean;
+  /** `/saved/:id` is one saved page in the reader view. */
+  savedId?: string;
   /** `/about` shows the landing page without sending returning visitors on to Read. */
   about: boolean;
 }
@@ -26,6 +30,8 @@ const PATHS: Record<RouteName, string> = {
   welcome: '/welcome',
   read: '/read',
   queue: '/queue',
+  saved: '/saved',
+  save: '/save',
   settings: '/settings',
   pricing: '/pricing',
   signin: '/signin',
@@ -43,10 +49,23 @@ const BY_PATH = new Map<string, RouteName>(
 export function parseRoute(pathname: string, search = ''): Route {
   const clean = pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname;
   if (clean === '/about') return { name: 'landing', signup: false, about: true };
+  const item = /^\/saved\/([^/]+)$/.exec(clean);
+  if (item) {
+    let savedId = item[1]!;
+    try {
+      savedId = decodeURIComponent(savedId);
+    } catch {
+      /* keep it as written; the server will not find it */
+    }
+    return { name: 'saved', signup: false, about: false, savedId };
+  }
   const name = BY_PATH.get(clean || '/') ?? 'read';
   const signup = name === 'signin' && new URLSearchParams(search).get('mode') === 'signup';
   return { name, signup, about: false };
 }
+
+/** The reader-view address of one saved page. */
+export const savedHref = (id: string): string => `${PATHS.saved}/${encodeURIComponent(id)}`;
 
 export function hrefFor(name: RouteName, opts: { signup?: boolean } = {}): string {
   return name === 'signin' && opts.signup ? `${PATHS.signin}?mode=signup` : PATHS[name];

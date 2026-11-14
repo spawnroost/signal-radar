@@ -1,13 +1,18 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { CloseIcon } from '../icons';
+import { enabledProviders, useAuthMethods } from '../lib/auth';
 import { gate, gateCopy, hideGate } from '../lib/gate';
 import { useMe } from '../lib/me';
 import { Link } from './Link';
+import { ProviderButtons } from './ProviderButtons';
 
 /** The one app-level sign-in sheet for signed-out taps on Save to Ideas or Summarize. */
 export function SignInSheet() {
   const kind = gate.use();
   const me = useMe();
+  const methods = useAuthMethods();
+  const providers = methods ? enabledProviders(methods) : [];
+  const [error, setError] = useState('');
   const ref = useRef<HTMLDialogElement>(null);
   const open = kind !== null && me.status !== 'ready';
 
@@ -43,12 +48,29 @@ export function SignInSheet() {
           </div>
           <div className="gate-body">
             <p className="hint">{copy.line}</p>
-            <Link to="signin" signup className="btn btn-solid" onClick={hideGate}>
-              Create free account
-            </Link>
-            <Link to="signin" className="text-btn" onClick={hideGate}>
-              Sign in
-            </Link>
+            {providers.length > 0 ? (
+              <>
+                <ProviderButtons
+                  providers={providers}
+                  onError={setError}
+                  returnTo={window.location.pathname + window.location.search}
+                />
+                {error && (
+                  <p className="warn" role="alert">
+                    {error}
+                  </p>
+                )}
+              </>
+            ) : (
+              <>
+                <Link to="signin" signup className="btn btn-solid" onClick={hideGate}>
+                  Create free account
+                </Link>
+                <Link to="signin" className="text-btn" onClick={hideGate}>
+                  Sign in
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}

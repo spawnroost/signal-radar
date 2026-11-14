@@ -375,17 +375,39 @@ input {
 .skeleton {
   animation: none;
 }
+/* Placeholders stay invisible for the first 150 ms, so a quick load never flashes one. With
+   reduced motion the animation is off and they simply show at once. */
+.skeleton-delay {
+  animation: skeleton-show 1ms 150ms backwards;
+}
+@keyframes skeleton-show {
+  from {
+    opacity: 0;
+  }
+}
 .bar {
+  --sk-base: var(--raised);
+  --sk-hi: color-mix(in srgb, var(--raised) 50%, var(--canvas));
   height: 14px;
   margin-top: var(--sp-2);
   border-radius: var(--radius);
-  background: var(--raised);
-  animation: breathe 1.6s ease-in-out infinite;
+  background: linear-gradient(90deg, var(--sk-base) 30%, var(--sk-hi) 50%, var(--sk-base) 70%) 0 0 /
+    300% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
 }
 .bar.short {
+  --sk-base: var(--surface);
+  --sk-hi: color-mix(in srgb, var(--surface) 50%, var(--canvas));
   height: 10px;
   margin-top: var(--sp-3);
-  background: var(--surface);
+}
+@keyframes shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
 }
 .skeleton .rank {
   color: var(--border);
@@ -834,13 +856,105 @@ a.btn {
 }
 
 .auth {
-  max-width: 24rem;
-  padding: var(--sp-6) 0;
+  max-width: 22rem;
+  margin: 0 auto;
+  padding: var(--sp-6) 0 var(--sp-7);
+}
+.auth-head {
+  display: grid;
+  justify-items: center;
+  gap: var(--sp-3);
+  text-align: center;
+}
+.auth-head .lede {
+  font-size: var(--fs-md);
+}
+.auth-mark {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  color: var(--text);
+}
+.auth-mark svg {
+  width: 28px;
+  height: 28px;
+}
+.auth-slot {
+  min-height: 7rem;
 }
 .form {
   display: grid;
   gap: var(--sp-4);
   margin-top: var(--sp-4);
+}
+.auth-form {
+  margin-top: var(--sp-5);
+}
+.auth-submit {
+  width: 100%;
+}
+.auth-switch,
+.auth-dev {
+  justify-self: center;
+}
+.auth-dev {
+  display: block;
+  margin: var(--sp-4) auto 0;
+}
+.auth-error {
+  margin-top: var(--sp-3);
+  text-align: center;
+}
+.auth-legal {
+  margin-top: var(--sp-5);
+  text-align: center;
+  text-wrap: balance;
+}
+.providers {
+  display: grid;
+  gap: var(--sp-3);
+  margin-top: var(--sp-5);
+}
+/* Official guideline colours: Google is white with its own grey stroke, GitHub is its near-black
+   (white-on-dark in the dark theme). They stay the same in both themes on purpose. */
+.btn-provider {
+  width: 100%;
+  min-height: 48px;
+  gap: var(--sp-3);
+  font-size: var(--fs-md);
+}
+.btn-google {
+  background: #fff;
+  border-color: #747775;
+  color: #1f1f1f;
+}
+.btn-github {
+  background: #24292f;
+  border-color: #24292f;
+  color: #fff;
+}
+:root[data-theme='dark'] .btn-github {
+  background: #f6f8fa;
+  border-color: #f6f8fa;
+  color: #24292f;
+}
+@media (hover: hover) {
+  .btn-google:hover {
+    background: #f2f2f2;
+  }
+  .btn-github:hover {
+    background: #32383f;
+  }
+  :root[data-theme='dark'] .btn-github:hover {
+    background: #e6e9ec;
+  }
+}
+.btn-provider:disabled {
+  opacity: 0.6;
+  cursor: default;
 }
 .auth-actions {
   display: flex;
@@ -1026,6 +1140,10 @@ kbd {
 @media (hover: hover) and (pointer: fine) {
   .keys {
     display: block;
+  }
+  /* Ideas' Keys control is one text line with sp-2 padding either side; every page head is as tall */
+  .page-head {
+    min-height: calc(var(--fs-sm) * 1.5 + 2 * var(--sp-2) + var(--sp-4) + var(--sp-2));
   }
 }
 @media (max-width: 767px) {
@@ -1231,24 +1349,40 @@ kbd {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: var(--sp-2);
+  gap: var(--sp-1);
   padding: var(--sp-5);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   background: var(--surface);
+}
+/* the recommended pass is simply a step darker; no coloured edge */
+.pass[data-best] {
+  background: var(--raised);
 }
 .pass-head {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: var(--sp-3);
   align-self: stretch;
+  min-height: 24px;
 }
 .pass-title {
   font-size: var(--fs-md);
   font-weight: 500;
 }
+.pass-flag {
+  padding: 1px var(--sp-2);
+  border-radius: 999px;
+  background: var(--canvas);
+  color: var(--text);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+}
 .pass-price {
-  margin-top: var(--sp-1);
+  margin-top: var(--sp-2);
+}
+.pass-month {
+  margin-bottom: var(--sp-4);
 }
 .pass .btn {
   align-self: stretch;
@@ -1261,9 +1395,15 @@ kbd {
 .pass-notes {
   display: grid;
   justify-items: start;
-  gap: var(--sp-2);
+  gap: var(--sp-1);
   margin-top: var(--sp-5);
   max-width: 40rem;
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+  text-wrap: pretty;
+}
+.pass-notes .text-btn {
+  margin-top: var(--sp-2);
 }
 .tier-lists {
   display: grid;
@@ -2465,4 +2605,313 @@ kbd {
 /* policy pages: the dev-only TODO note needs room before the intro */
 .policy > .warn {
   margin: var(--sp-3) 0 var(--sp-4);
+}
+
+/* ---------- Saved: list, reader view, share target ---------- */
+
+.tagbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin: var(--sp-2) 0 var(--sp-3);
+}
+.chip-count {
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+.chip[data-active='true'] .chip-count {
+  color: inherit;
+}
+
+.srow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  padding: 18px 0;
+  animation: fade 180ms ease-out both;
+}
+.srow.skeleton {
+  display: block;
+}
+.srow-main {
+  flex: 1;
+  min-width: 0;
+}
+.srow .meta {
+  margin-top: var(--sp-1);
+  word-spacing: 0.1em;
+}
+.srow-excerpt {
+  margin-top: var(--sp-2);
+  max-width: 62ch;
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+  text-wrap: pretty;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+.srow-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--sp-3);
+  margin-top: var(--sp-1);
+}
+.srow-thumb {
+  flex: none;
+  width: 72px;
+  height: 72px;
+  margin-top: 2px;
+  border-radius: var(--radius);
+  background: var(--raised);
+  object-fit: cover;
+}
+@media (min-width: 640px) {
+  .srow-thumb {
+    width: 96px;
+    height: 72px;
+  }
+}
+
+/* a tag is plain text with a hash in front; it is a filter in the list and removable in the reader */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-2);
+  font: 400 var(--fs-sm)/1.5 var(--sans);
+  cursor: pointer;
+}
+.tag::before {
+  content: '#';
+  margin-right: 1px;
+  color: var(--mark);
+}
+@media (hover: hover) {
+  button.tag:hover {
+    color: var(--text);
+  }
+}
+.confirm {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+.confirm-yes {
+  color: var(--crimson);
+}
+
+.save-fold {
+  margin-top: var(--sp-6);
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+}
+.save-fold summary {
+  min-height: 32px;
+  cursor: pointer;
+}
+.save-fold summary:hover {
+  color: var(--text);
+}
+.save-how {
+  display: grid;
+  gap: var(--sp-3);
+  max-width: 34rem;
+  margin-top: var(--sp-3);
+  text-wrap: pretty;
+}
+.state .save-how p {
+  color: var(--text-2);
+}
+.save-how strong {
+  color: var(--text);
+  font-weight: 600;
+}
+.bookmarklet {
+  display: inline-block;
+  padding: 2px var(--sp-2);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  text-decoration: none;
+  cursor: grab;
+}
+
+.reader {
+  max-width: 40rem;
+  margin: 0 auto;
+}
+.reader-back {
+  margin: var(--sp-3) 0 var(--sp-4);
+}
+.reader-head {
+  margin-bottom: var(--sp-6);
+}
+.reader-title {
+  font: 400 var(--fs-xl)/1.15 var(--serif);
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+.reader-head .meta {
+  margin-top: var(--sp-2);
+}
+.reader-actions {
+  margin-top: var(--sp-3);
+}
+.reader-head .item-extras {
+  margin-top: 0;
+}
+.reader-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 var(--sp-3);
+  margin-top: var(--sp-2);
+}
+.tag-edit {
+  cursor: default;
+  gap: 2px;
+}
+.tag-x {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-2);
+  font-size: var(--fs-md);
+  cursor: pointer;
+}
+@media (hover: hover) {
+  .tag-x:hover {
+    color: var(--text);
+  }
+}
+.tag-form input {
+  min-height: 32px;
+  width: 11rem;
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font-size: var(--fs-sm);
+}
+.tag-form input::placeholder {
+  color: var(--text-2);
+}
+.reader-head .warn {
+  margin-top: var(--sp-2);
+}
+
+/* the article: a book-like measure and the serif, links in ink with an underline */
+.reader-body {
+  font: 400 19px/1.65 var(--serif);
+  color: var(--text);
+  overflow-wrap: anywhere;
+  hyphens: auto;
+  text-wrap: pretty;
+}
+.reader-body > * + * {
+  margin-top: 1.1em;
+}
+.reader-body h1,
+.reader-body h2,
+.reader-body h3,
+.reader-body h4,
+.reader-body h5,
+.reader-body h6 {
+  margin-top: 1.8em;
+  font: 600 1.15em/1.3 var(--sans);
+  letter-spacing: -0.005em;
+  text-wrap: balance;
+}
+.reader-body h1 {
+  font-size: 1.3em;
+}
+.reader-body a {
+  color: var(--link);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+.reader-body img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 1.4em auto;
+  border-radius: var(--radius);
+}
+.reader-body figure {
+  margin: 1.4em 0;
+}
+.reader-body figcaption {
+  margin-top: var(--sp-2);
+  color: var(--text-2);
+  font: 400 var(--fs-sm)/1.5 var(--sans);
+}
+.reader-body blockquote {
+  padding-left: var(--sp-4);
+  border-left: 2px solid var(--border);
+  color: var(--text-2);
+}
+.reader-body ul,
+.reader-body ol {
+  padding-left: 1.4em;
+  list-style: revert;
+}
+.reader-body li + li {
+  margin-top: 0.4em;
+}
+.reader-body pre {
+  overflow-x: auto;
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--radius);
+  background: var(--surface);
+  font: 400 var(--fs-sm)/1.55 var(--mono);
+  white-space: pre;
+  hyphens: none;
+}
+.reader-body code {
+  font: 400 0.85em var(--mono);
+  hyphens: none;
+}
+.reader-body table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font: 400 var(--fs-sm)/1.5 var(--sans);
+}
+.reader-body th,
+.reader-body td {
+  padding: var(--sp-1) var(--sp-3) var(--sp-1) 0;
+  text-align: left;
+  vertical-align: top;
+}
+.reader-body hr {
+  border: 0;
+  height: 1px;
+  background: var(--border);
+}
+.reader-body-empty {
+  font: 400 var(--fs-md)/1.5 var(--sans);
+}
+.reader-body-empty p + p {
+  margin-top: var(--sp-3);
+}
+@media (max-width: 767px) {
+  .reader-body {
+    font-size: 18px;
+  }
 }

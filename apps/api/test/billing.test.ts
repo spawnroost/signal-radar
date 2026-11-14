@@ -84,28 +84,63 @@ describe.skipIf(!dbAvailable)('billing (Razorpay passes)', () => {
       body,
     });
 
-  it('GET /passes is public, uses the requested currency and lists fixed prices', async () => {
-    const inr = (await (await passes({ 'cf-ipcountry': 'IN' })).json()) as Json;
-    expect(inr).toEqual({
-      currency: 'INR',
-      enabled: true,
-      passes: [
-        { id: 'p30', days: 30, amount: 9900, label: '₹99' },
-        { id: 'p90', days: 90, amount: 24900, label: '₹249' },
-        { id: 'p365', days: 365, amount: 79900, label: '₹799' },
-      ],
-    });
-    const usd = (await (await passes({ 'cf-ipcountry': 'US' })).json()) as Json;
-    expect(usd.currency).toBe('USD');
-    expect(usd.passes[0]).toEqual({ id: 'p30', days: 30, amount: 200, label: '$2' });
-    const override = (await (await passes({ 'cf-ipcountry': 'US' })).json()) as Json;
-    expect(override.currency).toBe('USD');
-    const forced = (await (await passes({ 'cf-ipcountry': 'IN' })).json()) as Json;
-    expect(forced.currency).toBe('INR');
-    const chosen = (await (
+  it('GET /passes is public, defaults to INR everywhere and lists fixed prices', async () => {
+    for (const headers of [{}, { 'cf-ipcountry': 'US' }, { 'accept-language': 'de-DE' }]) {
+      const res = (await (await passes(headers)).json()) as Json;
+      expect(res).toEqual({
+        currency: 'INR',
+        international: false,
+        enabled: true,
+        passes: [
+          { id: 'p30', days: 30, amount: 9900, label: '₹99' },
+          { id: 'p90', days: 90, amount: 24900, label: '₹249' },
+          { id: 'p365', days: 365, amount: 79900, label: '₹799' },
+        ],
+      });
+    }
+    // USD is ignored while international payments are off.
+    const asked = (await (
       await ctx.app.request('/api/billing/passes?currency=USD', { headers: { origin: WEB_ORIGIN } })
     ).json()) as Json;
-    expect(chosen.currency).toBe('USD');
+    expect(asked.currency).toBe('INR');
+  });
+
+  it('rejects USD orders while international payments are off', async () => {
+    const u = await signUp(ctx.app, 'usd@example.com');
+    const res = await order(u, { passId: 'p30', currency: 'USD' });
+    expect(res.status).toBe(400);
+    expect(orderRequests).toHaveLength(0);
+  });
+
+  it('serves and accepts USD when international payments are on', async () => {
+    const intl = await setup(
+      { RAZORPAY_KEY_ID: KEY_ID, RAZORPAY_KEY_SECRET: KEY_SECRET },
+      { fetch: netFetch },
+      { internationalPayments: true },
+    );
+    try {
+      await intl.reset();
+      const listed = (await (
+        await intl.app.request('/api/billing/passes?currency=USD', {
+          headers: { origin: WEB_ORIGIN },
+        })
+      ).json()) as Json;
+      expect(listed).toMatchObject({ currency: 'USD', international: true });
+      expect(listed.passes[0]).toEqual({ id: 'p30', days: 30, amount: 200, label: '$2' });
+      const def = (await (await intl.app.request('/api/billing/passes')).json()) as Json;
+      expect(def.currency).toBe('INR');
+
+      const u = await signUp(intl.app, 'usd2@example.com');
+      const res = await call(intl.app, '/api/billing/order', {
+        method: 'POST',
+        user: u,
+        json: { passId: 'p30', currency: 'USD' },
+      });
+      expect(res.status).toBe(200);
+      expect(await res.json()).toMatchObject({ amount: 200, currency: 'USD' });
+    } finally {
+      await intl.close();
+    }
   });
 
   it('creates an order from the catalogue and stores the purchase', async () => {
@@ -307,7 +342,7 @@ describe.skipIf(!dbAvailable)('billing (Razorpay passes)', () => {
       const create = await call(off.app, '/api/billing/order', {
         method: 'POST',
         user: u,
-        json: { passId: 'p30', currency: 'USD' },
+        json: { passId: 'p30', currency: 'INR' },
       });
       expect(create.status).toBe(503);
       expect(await create.json()).toEqual({ error: "Payments aren't set up" });

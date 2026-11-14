@@ -16,7 +16,7 @@ export const PAGE_META = {
   },
   '/pricing': {
     title: 'Pricing · Signal Radar',
-    description: `Free keeps an Ideas queue and 3 page summaries a day. Pro is prepaid: ${PRICE.pro} for 30 days, ₹99 in India, and it writes the hook, angle and title for each story.`,
+    description: `Free keeps an Ideas queue and 3 page summaries a day. Pro is prepaid: ${PRICE.pro} for 30 days, and it writes the hook, angle and title for each story.`,
   },
   '/terms': {
     title: 'Terms · Signal Radar',

@@ -73,7 +73,7 @@ const FAQ: { q: string; a: React.ReactNode }[] = [
   },
   {
     q: 'What does Pro cost?',
-    a: '₹99 or $2 for 30 days, ₹249 or $5 for 90 days, ₹799 or $15 for a year. No subscription and no auto-renew. Buying again adds days to the end. New accounts start with 7 days of Pro free.',
+    a: `${PRICE.allPasses}. No subscription and no auto-renew. Buying again adds days to the end. New accounts start with 7 days of Pro free.`,
   },
   {
     q: 'Where do the stories come from?',
@@ -192,7 +192,7 @@ export function Landing({
           </p>
         </div>
         <div className="lsec-body">
-          {data.status === 'loading' && <Skeleton count={5} />}
+          {data.status === 'loading' && <Skeleton count={5} delay={false} />}
           {data.status === 'error' && (
             <div className="state" role="alert">
               <h3 className="state-title">The feed did not load</h3>
@@ -285,7 +285,7 @@ export function Landing({
                 <span className="price">{PRICE.pro}</span>
                 <span className="meta">{PRICE.proPeriod}</span>
               </p>
-              <p className="meta">₹99 in India. Also $5 for 90 days, $15 for a year.</p>
+              <p className="meta">{PRICE.proMore}</p>
               <ul className="plan-list">
                 {PRO_FEATURES.map((f) => (
                   <li key={f}>{f}</li>

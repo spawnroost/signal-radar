@@ -13,6 +13,7 @@ import { TopicPicker } from './TopicPicker';
 import { FeedAdder, FeedList } from './Feeds';
 import { MAX_CUSTOM_FEEDS } from '../lib/feeds';
 import { Notifications } from './Notifications';
+import { FormSkeleton } from './Skeletons';
 
 interface Props {
   me: Me;
@@ -29,9 +30,9 @@ export function Settings({ me, defaults }: Props) {
       {config && defaults ? (
         <SettingsForm config={config} defaults={defaults} me={me} />
       ) : (
-        <p className="meta" aria-busy="true">
-          Loading your settings
-        </p>
+        <div aria-busy="true">
+          <FormSkeleton />
+        </div>
       )}
       <PlanSection me={me} />
     </section>

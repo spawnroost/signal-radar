@@ -3,6 +3,7 @@ import { api, ApiError } from '../lib/api';
 import { refreshMe, type Me } from '../lib/me';
 import { needsInstall, status, subscribe, unsubscribe, type PushStatus } from '../lib/push';
 import { Link } from './Link';
+import { LineSkeleton } from './Skeletons';
 
 const POLL_MS = 3000;
 const POLL_LIMIT_MS = 2 * 60 * 1000;
@@ -62,9 +63,9 @@ function PushRow() {
 
   if (st === null) {
     return (
-      <p className="meta" aria-busy="true">
-        Checking this device
-      </p>
+      <div aria-busy="true">
+        <LineSkeleton />
+      </div>
     );
   }
 

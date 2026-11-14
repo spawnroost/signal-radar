@@ -7,7 +7,7 @@ export interface PassesInfo {
   enabled: boolean;
 }
 
-/** The public price list; the server picks the currency from the visitor's country. */
+/** The public price list; INR unless USD is asked for (and international payments are on). */
 export function fetchPasses(currency?: Currency): Promise<PassesInfo> {
   return api<PassesInfo>(`/api/billing/passes${currency ? `?currency=${currency}` : ''}`);
 }
