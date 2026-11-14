@@ -416,8 +416,24 @@ input {
 /* ---------- states ---------- */
 
 .state {
+  position: relative;
   padding: var(--sp-7) 0;
   max-width: 28rem;
+}
+.state > * {
+  position: relative;
+}
+/* the radar's sweeps, very faint, in the corner of a "nothing yet" state; never an error */
+.state > .state-arcs {
+  position: absolute;
+  top: var(--sp-3);
+  right: 0;
+  width: 112px;
+  height: 112px;
+  color: var(--text);
+  opacity: 0.13;
+  transform: rotate(180deg);
+  pointer-events: none;
 }
 .state-title {
   font: 400 var(--fs-xl)/1.15 var(--serif);
@@ -781,6 +797,31 @@ input {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.menu-plan {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-1) var(--sp-2);
+  padding: 0 var(--sp-2) var(--sp-2);
+  margin-bottom: var(--sp-1);
+  border-bottom: 1px solid var(--border);
+  font-size: var(--fs-sm);
+}
+.plan-badge {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--raised);
+  color: var(--text-2);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.6;
+}
+.plan-badge[data-pro] {
+  background: var(--text);
+  color: var(--canvas);
+}
 .menu-item {
   display: flex;
   align-items: center;
@@ -870,6 +911,7 @@ a.btn {
   font-size: var(--fs-md);
 }
 .auth-mark {
+  position: relative;
   display: grid;
   place-items: center;
   width: 56px;
@@ -881,6 +923,23 @@ a.btn {
 .auth-mark svg {
   width: 28px;
   height: 28px;
+}
+/* two mirrored quarter-sets fan out above the mark like a sweep; faint, fading toward the top */
+.auth-mark svg.auth-arcs {
+  position: absolute;
+  left: 50%;
+  bottom: 50%;
+  width: 124px;
+  height: 124px;
+  color: var(--text);
+  opacity: 0.14;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(to top, #000 25%, transparent 85%);
+  mask-image: linear-gradient(to top, #000 25%, transparent 85%);
+}
+.auth-mark svg.auth-arcs-l {
+  transform: scaleX(-1);
+  transform-origin: 0 100%;
 }
 .auth-slot {
   min-height: 7rem;
@@ -1118,19 +1177,45 @@ kbd {
 .keys summary:hover {
   color: var(--text);
 }
-.keys p {
+.keys-pop {
   position: absolute;
   right: 0;
-  top: 100%;
+  top: calc(100% + 2px);
   z-index: 4;
+  display: grid;
+  gap: var(--sp-1);
   width: max-content;
-  padding: var(--sp-3) var(--sp-3);
+  min-width: 11.5rem;
+  margin: 0;
+  padding: var(--sp-3) var(--sp-4);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background: var(--surface);
   box-shadow: var(--shadow);
   font-size: var(--fs-sm);
+  line-height: 1.5;
   color: var(--text);
+  animation: fade 120ms ease-out both;
+}
+.keys-row {
+  display: grid;
+  grid-template-columns: 3.25rem 1fr;
+  align-items: center;
+  gap: var(--sp-3);
+  min-height: 28px;
+}
+.keys-row dt {
+  display: flex;
+  gap: var(--sp-1);
+}
+.keys-row dd {
+  margin: 0;
+  color: var(--text-2);
+}
+.keys kbd {
+  min-width: 22px;
+  padding: 1px 6px;
+  text-align: center;
 }
 @media (hover: hover) and (pointer: fine) {
   .keys {
@@ -1409,6 +1494,22 @@ kbd {
   margin-top: var(--sp-4);
   font: 400 var(--fs-lg)/1.45 var(--serif);
   text-wrap: pretty;
+}
+.pricing-you {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  max-width: 40rem;
+  margin-bottom: var(--sp-4);
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+.pricing-you .plan-badge {
+  flex: none;
 }
 .pricing-soon {
   display: flex;
@@ -1740,10 +1841,31 @@ kbd {
 }
 
 .hero {
+  position: relative;
   display: grid;
   justify-items: start;
   gap: var(--sp-4);
   padding: var(--sp-7) 0 var(--sp-7);
+}
+.hero > :not(.hero-arcs) {
+  position: relative;
+}
+.hero-arcs {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 176px;
+  height: 176px;
+  color: var(--text);
+  opacity: 0.12;
+  transform: rotate(180deg);
+  pointer-events: none;
+}
+@media (min-width: 768px) {
+  .hero-arcs {
+    width: 300px;
+    height: 300px;
+  }
 }
 .hero-title {
   font: 400 var(--fs-3xl)/1.04 var(--serif);

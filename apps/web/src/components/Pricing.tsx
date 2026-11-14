@@ -5,7 +5,7 @@ import { showGate, setGateNext } from '../lib/gate';
 import { refreshMe, type MeState } from '../lib/me';
 import { usePaymentsOpen } from '../lib/payments';
 import { CheckIcon, RadarArcs } from '../icons';
-import { formatDate } from '../lib/plan';
+import { formatDate, planBadge } from '../lib/plan';
 import {
   CURRENCY_SYMBOL,
   INTERNATIONAL_PAYMENTS,
@@ -74,10 +74,34 @@ export function Pricing({ me }: { me: MeState }) {
   };
 
   const until = paidUntil || (me.status === 'ready' ? me.me.proUntil : '');
+  const badge = me.status === 'ready' ? planBadge(me.me) : null;
+  const trial = badge?.trialDays != null ? badge : null;
+  // Right after a purchase the sentence under the passes says the same thing, so it stays quiet.
+  const youAreStatus = badge?.name === 'Pro' && !paidUntil;
   const other: Currency = currency === 'INR' ? 'USD' : 'INR';
 
   return (
     <section className="pricing" aria-labelledby="pricing-title">
+      {badge && youAreStatus && (
+        <div className="pricing-you" role="status">
+          <span className="plan-badge" data-pro>
+            Pro
+          </span>
+          <p>
+            {trial
+              ? `Your free trial ends ${formatDate(until || null)}, ${
+                  trial.trialDays === 0
+                    ? 'today'
+                    : `in ${trial.trialDays} ${trial.trialDays === 1 ? 'day' : 'days'}`
+                }.`
+              : until
+                ? `You’re on Pro until ${formatDate(until)}.`
+                : 'You’re on Pro.'}
+            {until && enabled !== false && ' A pass adds days to the end.'}
+          </p>
+        </div>
+      )}
+
       <header className="pricing-hero">
         <RadarArcs className="pricing-arcs" />
         <h2 id="pricing-title" className="page-title page-title-lg">

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
+import { RadarArcs } from '../icons';
 import { useNow } from '../hooks';
 import { ApiError } from '../lib/api';
 import { refreshMe } from '../lib/me';
@@ -339,6 +340,7 @@ export function Saved() {
         {empty &&
           (state === 'unread' && !tag ? (
             <div className="state">
+              <RadarArcs className="state-arcs" />
               <h2 className="state-title">Nothing saved yet</h2>
               <p>
                 Paste a link above, or save pages as you browse. Below, the bookmarklet and share
@@ -347,6 +349,7 @@ export function Saved() {
             </div>
           ) : (
             <div className="state">
+              <RadarArcs className="state-arcs" />
               <h2 className="state-title">{tag ? `Nothing tagged ${tag}` : 'Nothing archived'}</h2>
               <p>
                 {tag

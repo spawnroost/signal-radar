@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Subscription } from '../src/lib/me';
-import { formatDate, planSummary } from '../src/lib/plan';
+import { formatDate, planBadge, planSummary } from '../src/lib/plan';
 
 const sub = (over: Partial<Subscription>): Subscription => ({
   plan: 'pro',
@@ -45,5 +45,35 @@ describe('planSummary', () => {
     expect(formatDate('2026-01-01T23:30:00Z')).toBe('1 Jan 2026');
     expect(formatDate('nope')).toBe('');
     expect(formatDate(null)).toBe('');
+  });
+});
+
+describe('planBadge', () => {
+  const me = (subscription: Subscription, proUntil: string | null = null) => ({
+    subscription,
+    proUntil,
+  });
+
+  it('shows days left on a trial', () => {
+    const b = planBadge(
+      me(sub({ status: 'trialing', trialEndsAt: '2026-11-14T12:00:00Z' }), '2026-11-14T12:00:00Z'),
+      NOW,
+    );
+    expect(b).toMatchObject({ name: 'Pro', note: 'trial, 5 days left', trialDays: 5 });
+  });
+
+  it('shows the end date of a pass', () => {
+    const b = planBadge(me(sub({}), '2027-03-12T00:00:00Z'), NOW);
+    expect(b).toMatchObject({ name: 'Pro', note: 'until 12 Mar 2027', open: false });
+  });
+
+  it('shows plain Pro when there is no end date', () => {
+    expect(planBadge(me(sub({})), NOW)).toMatchObject({ name: 'Pro', note: '', open: true });
+  });
+
+  it('shows Free for everyone else', () => {
+    expect(planBadge(me(sub({ status: 'none', plan: 'free', isPro: false })), NOW).name).toBe(
+      'Free',
+    );
   });
 });

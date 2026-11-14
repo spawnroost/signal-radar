@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { MeState } from '../lib/me';
-import { proUntilNote } from '../lib/passes';
+import { planBadge } from '../lib/plan';
 import { useInstall } from '../lib/install';
 import { PRO_SOON, usePaymentsOpen } from '../lib/payments';
 import { Link } from './Link';
@@ -48,7 +48,7 @@ export function AccountMenu({ me, onSignOut }: Props) {
 
   const { user } = me.me;
   const initial = (user.name || user.email).trim().charAt(0).toUpperCase() || '?';
-  const proUntil = proUntilNote(me.me.proUntil);
+  const plan = planBadge(me.me);
 
   return (
     <div className="account" ref={root}>
@@ -66,11 +66,15 @@ export function AccountMenu({ me, onSignOut }: Props) {
       {open && (
         <div className="menu" role="menu">
           <p className="menu-who meta">{user.email}</p>
-          {proUntil &&
+          <p className="menu-plan">
+            <span className="plan-badge" data-pro={plan.name === 'Pro' || undefined}>
+              {plan.name}
+            </span>
+            {plan.note && <span className="meta">{plan.note}</span>}
+          </p>
+          {plan.name === 'Pro' &&
             (paymentsOpen === false ? (
-              <p className="menu-note meta">
-                {proUntil} · {PRO_SOON}
-              </p>
+              <p className="menu-note meta">{PRO_SOON}</p>
             ) : (
               <Link
                 to="pricing"
@@ -78,7 +82,7 @@ export function AccountMenu({ me, onSignOut }: Props) {
                 className="menu-item"
                 onClick={() => setOpen(false)}
               >
-                {proUntil} · Add days
+                Add days
               </Link>
             ))}
           <Link to="settings" role="menuitem" className="menu-item" onClick={() => setOpen(false)}>

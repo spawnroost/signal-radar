@@ -3,7 +3,7 @@ import { authErrorMessage, enabledProviders, signIn, signUp, useAuthMethods } fr
 import { takeGateNext } from '../lib/gate';
 import { refreshMe, type MeState } from '../lib/me';
 import { navigate } from '../lib/route';
-import { RadarMark } from '../icons';
+import { RadarArcs, RadarMark } from '../icons';
 import { Link } from './Link';
 import { ProviderButtons } from './ProviderButtons';
 import { ProvidersSkeleton } from './Skeletons';
@@ -85,6 +85,8 @@ export function SignIn({ me, startSignup, onSignOut }: Props) {
     <section className="auth" aria-labelledby="auth-title">
       <div className="auth-head">
         <span className="auth-mark">
+          <RadarArcs className="auth-arcs" />
+          <RadarArcs className="auth-arcs auth-arcs-l" />
           <RadarMark />
         </span>
         <h2 id="auth-title" className="page-title">

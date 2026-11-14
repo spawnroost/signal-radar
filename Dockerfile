@@ -59,7 +59,8 @@ CMD ["node_modules/.bin/tsx", "apps/api/src/server.ts"]
 
 # ----- tools: migrate, radar CLI, cron, backups -------------------------------------
 FROM source AS tools
-ENV NODE_ENV=production
+ENV NODE_ENV=production \
+    npm_config_verify_deps_before_run=false
 USER root
 RUN apk add --no-cache postgresql18-client rclone \
     && mkdir -p /backups && chown node:node /backups

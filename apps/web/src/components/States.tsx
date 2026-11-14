@@ -1,3 +1,5 @@
+import { RadarArcs } from '../icons';
+
 interface EmptyProps {
   topic: boolean;
   source: boolean;
@@ -17,6 +19,7 @@ export function EmptyState({
   const filtered = topic || source;
   return (
     <div className="state">
+      <RadarArcs className="state-arcs" />
       <h2 className="state-title">Nothing here yet</h2>
       <p>
         {topic

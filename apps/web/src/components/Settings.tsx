@@ -3,8 +3,7 @@ import type { CreatorProfile, Niche } from '@radar/core/ranking';
 import { saveConfig, useConfig, type DraftFeed, type ServerConfig } from '../lib/config';
 import type { Defaults } from '../lib/feed';
 import type { Me } from '../lib/me';
-import { planSummary } from '../lib/plan';
-import { proUntilNote } from '../lib/passes';
+import { planBadge, planSummary } from '../lib/plan';
 import { creatorToSave, emptyCreator } from '../lib/creator';
 import { CreatorFields } from './CreatorFields';
 import { InstallRow } from './InstallRow';
@@ -322,7 +321,7 @@ function SettingsForm({
 
 function PlanSection({ me }: { me: Me }) {
   const plan = planSummary(me.subscription);
-  const proUntil = proUntilNote(me.proUntil);
+  const badge = planBadge(me);
   return (
     <section className="settings-sec" aria-labelledby="set-plan">
       <h3 id="set-plan" className="sheet-h">
@@ -330,7 +329,7 @@ function PlanSection({ me }: { me: Me }) {
       </h3>
       <p className="plan-line">
         <span className="plan-name">{plan.title}</span>
-        <span className="meta">{plan.detail}</span>
+        {plan.detail && <span className="meta">{plan.detail}</span>}
       </p>
       <div className="auth-actions">
         {plan.canUpgrade && (
@@ -338,7 +337,9 @@ function PlanSection({ me }: { me: Me }) {
             {plan.kind === 'free' ? 'See Pricing' : 'Keep Pro'}
           </UpgradeLink>
         )}
-        {proUntil && !plan.canUpgrade && <UpgradeLink className="btn">Add days</UpgradeLink>}
+        {badge.name === 'Pro' && !plan.canUpgrade && (
+          <UpgradeLink className="btn">Add days</UpgradeLink>
+        )}
       </div>
     </section>
   );

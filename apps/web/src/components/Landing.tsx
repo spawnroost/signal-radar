@@ -5,6 +5,7 @@ import { rankFeed } from '../lib/rankClient';
 import { usePaymentsOpen } from '../lib/payments';
 import { REPO_URL } from '../lib/site';
 import { FREE_FEATURES, PRICE, PRO_FEATURES } from '../lib/tiers';
+import { RadarArcs } from '../icons';
 import { PolicyLinks } from './Footer';
 import { ItemList, Skeleton } from './ItemList';
 import { Link } from './Link';
@@ -155,6 +156,7 @@ export function Landing({
   return (
     <div className="landing">
       <section className="hero" aria-labelledby="landing-title">
+        <RadarArcs className="hero-arcs" />
         <h1 id="landing-title" className="hero-title">
           Find the story before the algorithm does.
         </h1>

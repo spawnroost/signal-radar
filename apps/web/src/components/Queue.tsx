@@ -15,6 +15,8 @@ import {
   type QueueItem,
   type QueueStatus,
 } from '../lib/queue';
+import { KeysHelp } from './KeysHelp';
+import { RadarArcs } from '../icons';
 import { QueueRow } from './QueueRow';
 import { ListSkeleton } from './Skeletons';
 import { Tabs } from './Tabs';
@@ -233,12 +235,7 @@ export function Queue({ isPro }: { isPro: boolean }) {
         <h2 id="queue-title" className="page-title">
           Your ideas
         </h2>
-        <details className="keys">
-          <summary>Keys</summary>
-          <p>
-            <kbd>j</kbd> <kbd>k</kbd> move, <kbd>p</kbd> pick, <kbd>s</kbd> skip, <kbd>u</kbd> undo
-          </p>
-        </details>
+        <KeysHelp />
       </div>
       <p className="lede queue-lede">
         Stories picked for your topics after each run. Pick the ones worth making something about
@@ -357,6 +354,7 @@ export function Queue({ isPro }: { isPro: boolean }) {
         {(load === 'ready' || load === 'more') &&
           (items.length === 0 ? (
             <div className="state">
+              <RadarArcs className="state-arcs" />
               <h2 className="state-title">
                 {status === 'new'
                   ? 'Nothing to review'

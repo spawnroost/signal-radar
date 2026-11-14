@@ -1,4 +1,4 @@
-import type { Subscription } from './me';
+import type { Me, Subscription } from './me';
 
 export interface PlanSummary {
   kind: 'free' | 'trial' | 'active' | 'canceled';
@@ -42,7 +42,7 @@ export function planSummary(sub: Subscription, now = Date.now()): PlanSummary {
     return {
       kind: 'active',
       title: 'Pro',
-      detail: sub.currentPeriodEnd ? `Pro until ${formatDate(sub.currentPeriodEnd)}.` : 'Active.',
+      detail: sub.currentPeriodEnd ? `Pro until ${formatDate(sub.currentPeriodEnd)}.` : '',
       canUpgrade: false,
       canCancel: false,
     };
@@ -51,7 +51,9 @@ export function planSummary(sub: Subscription, now = Date.now()): PlanSummary {
     return {
       kind: 'canceled',
       title: 'Pro, canceled',
-      detail: `You keep Pro until ${formatDate(sub.currentPeriodEnd)}.`,
+      detail: sub.currentPeriodEnd
+        ? `You keep Pro until ${formatDate(sub.currentPeriodEnd)}.`
+        : 'You keep Pro for now.',
       canUpgrade: true,
       canCancel: false,
     };
@@ -66,4 +68,35 @@ export function planSummary(sub: Subscription, now = Date.now()): PlanSummary {
     canUpgrade: true,
     canCancel: false,
   };
+}
+
+export interface PlanBadge {
+  /** "Pro" or "Free". */
+  name: 'Pro' | 'Free';
+  /** The quiet part after the name: "trial, 5 days left", "until 12 Mar 2027", or ''. */
+  note: string;
+  /** Days left on a trial, else null. */
+  trialDays: number | null;
+  /** Pro with no end date (granted by hand, or the end is unknown). */
+  open: boolean;
+}
+
+/** One line for the account menu, Settings and Pricing: what plan the user is on and until when. */
+export function planBadge(me: Pick<Me, 'subscription' | 'proUntil'>, now = Date.now()): PlanBadge {
+  const sub = me.subscription;
+  if (!sub.isPro) return { name: 'Free', note: '', trialDays: null, open: false };
+  const end = me.proUntil ?? (sub.status === 'trialing' ? sub.trialEndsAt : sub.currentPeriodEnd);
+  const t = end ? Date.parse(end) : NaN;
+  const days = Number.isNaN(t) ? null : Math.max(0, Math.ceil((t - now) / DAY));
+  if (sub.status === 'trialing') {
+    const left =
+      days === null
+        ? ''
+        : days === 0
+          ? ', ends today'
+          : `, ${days} ${days === 1 ? 'day' : 'days'} left`;
+    return { name: 'Pro', note: `trial${left}`, trialDays: days, open: false };
+  }
+  const date = formatDate(end);
+  return { name: 'Pro', note: date ? `until ${date}` : '', trialDays: null, open: !date };
 }
