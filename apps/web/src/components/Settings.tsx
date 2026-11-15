@@ -4,6 +4,7 @@ import { saveConfig, useConfig, type DraftFeed, type ServerConfig } from '../lib
 import type { Defaults } from '../lib/feed';
 import type { Me } from '../lib/me';
 import { planBadge, planSummary } from '../lib/plan';
+import { usePendingPayment } from '../lib/upi';
 import { creatorToSave, emptyCreator } from '../lib/creator';
 import { CreatorFields } from './CreatorFields';
 import { InstallRow } from './InstallRow';
@@ -323,6 +324,7 @@ function SettingsForm({
 }
 
 function PlanSection({ me }: { me: Me }) {
+  const waiting = usePendingPayment(true);
   const plan = planSummary(me.subscription);
   const badge = planBadge(me);
   return (
@@ -333,6 +335,11 @@ function PlanSection({ me }: { me: Me }) {
       <PlanLine name={badge.name}>
         {plan.kind === 'trial' ? `Free trial. ${plan.detail}` : plan.detail || 'No end date.'}
       </PlanLine>
+      {waiting && (
+        <PlanLine name={badge.name} role="status">
+          Payment waiting for approval
+        </PlanLine>
+      )}
       <div className="auth-actions">
         {plan.canUpgrade && (
           <UpgradeLink className="btn">

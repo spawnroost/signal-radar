@@ -1,26 +1,16 @@
 import { useState } from 'react';
-import { formatPrice, PASSES, type Currency, type Pass } from '@radar/core/passes';
-import { createOrder, loadCheckout, openCheckout, verifyPayment } from '../lib/billing';
+import { formatPrice, PASSES, type Pass } from '@radar/core/passes';
 import { showGate, setGateNext } from '../lib/gate';
-import { refreshMe, type MeState } from '../lib/me';
+import type { MeState } from '../lib/me';
 import { usePaymentsOpen } from '../lib/payments';
 import { CheckIcon, RadarArcs } from '../icons';
 import { formatDate, planBadge } from '../lib/plan';
-import {
-  CURRENCY_SYMBOL,
-  INTERNATIONAL_PAYMENTS,
-  durationLabel,
-  perMonth,
-  savingsPercent,
-  storeCurrency,
-  storedCurrency,
-} from '../lib/passes';
+import { durationLabel, perMonth, savingsPercent } from '../lib/passes';
+import { usePendingPayment } from '../lib/upi';
 import { COMPARE, PRICE } from '../lib/tiers';
 import { Link } from './Link';
 import { PlanLine } from './PlanLine';
-
-/** Razorpay's checkout is a light page, so it gets the app's light-theme ink for its buttons. */
-const CHECKOUT_INK = '#26251e';
+import { UpiPay } from './UpiPay';
 
 const HERO = {
   free: {
@@ -49,55 +39,19 @@ function daysLeftText(days: number): string {
 }
 
 export function Pricing({ me }: { me: MeState }) {
-  // INR unless the build offers USD and the visitor picked it earlier; the server agrees.
-  const [currency, setCurrency] = useState<Currency>(() => storedCurrency());
-  /** Null until the server has said whether Razorpay keys are set (or when it could not). */
+  /** Null until the server has said whether a UPI ID is set (or when it could not). */
   const enabled = usePaymentsOpen();
-  const [busy, setBusy] = useState<string | null>(null);
-  const [error, setError] = useState('');
-  const [paidUntil, setPaidUntil] = useState('');
+  const [paying, setPaying] = useState<Pass | null>(null);
+  const waiting = usePendingPayment(me.status === 'ready');
 
-  const buy = async (pass: Pass) => {
+  const buy = (pass: Pass) => {
     if (me.status !== 'ready') {
       setGateNext('/pricing');
       showGate('pro');
       return;
     }
-    if (enabled !== true || busy !== null) return;
-    setBusy(pass.id);
-    setError('');
-    setPaidUntil('');
-    try {
-      await loadCheckout();
-      const order = await createOrder(pass.id, currency);
-      openCheckout({
-        key: order.keyId,
-        amount: order.amount,
-        currency: order.currency,
-        name: order.name,
-        description: `${durationLabel(pass.days)} of Pro`,
-        order_id: order.orderId,
-        prefill: { email: order.email },
-        theme: { color: CHECKOUT_INK },
-        modal: { ondismiss: () => setBusy(null) },
-        handler: (signature) => {
-          verifyPayment(signature)
-            .then(async (res) => {
-              setPaidUntil(res.currentPeriodEnd);
-              await refreshMe();
-            })
-            .catch(() =>
-              setError(
-                'Payment went through but we could not confirm it; reload the page in a moment.',
-              ),
-            )
-            .finally(() => setBusy(null));
-        },
-      });
-    } catch (e) {
-      setBusy(null);
-      setError(e instanceof Error ? e.message : 'Could not start payment. Try again.');
-    }
+    if (enabled !== true) return;
+    setPaying(pass);
   };
 
   const badge = me.status === 'ready' ? planBadge(me.me) : null;
@@ -113,7 +67,6 @@ export function Pricing({ me }: { me: MeState }) {
           badge.daysLeft === null ? '' : `, ${daysLeftText(badge.daysLeft)}`
         }`;
   const copy = HERO[noEnd ? 'open' : trial ? 'trial' : isPro ? 'pro' : 'free'];
-  const other: Currency = currency === 'INR' ? 'USD' : 'INR';
 
   const compare = (
     <section className="compare" aria-labelledby="pricing-compare">
@@ -165,6 +118,11 @@ export function Pricing({ me }: { me: MeState }) {
           {copy.title}
         </h2>
         <p className="pricing-pitch">{copy.pitch}</p>
+        {waiting && !noEnd && (
+          <PlanLine name={isPro ? 'Pro' : 'Free'} role="status">
+            Payment waiting for approval
+          </PlanLine>
+        )}
         {noEnd && (
           <Link to="read" className="btn pricing-back">
             Open the radar
@@ -197,8 +155,7 @@ export function Pricing({ me }: { me: MeState }) {
         <ul className="passes">
           {PASSES.map((pass) => {
             const best = pass.id === 'p365';
-            const amount = currency === 'INR' ? pass.inr : pass.usd;
-            const saves = savingsPercent(pass, currency);
+            const saves = savingsPercent(pass, 'INR');
             const length = durationLabel(pass.days);
             return (
               <li key={pass.id} className="pass" data-best={best || undefined}>
@@ -208,9 +165,9 @@ export function Pricing({ me }: { me: MeState }) {
                   {best && <span className="pass-flag">Best value</span>}
                 </div>
                 <p className="pass-price">
-                  <span className="price">{formatPrice(pass, currency)}</span>
+                  <span className="price">{formatPrice(pass, 'INR')}</span>
                 </p>
-                <p className="pass-month">{perMonth(amount, pass.days, currency)}</p>
+                <p className="pass-month">{perMonth(pass.inr, pass.days, 'INR')}</p>
                 <p className="pass-save">
                   {saves > 0
                     ? `Saves ${saves}% against 30-day passes`
@@ -224,44 +181,15 @@ export function Pricing({ me }: { me: MeState }) {
                       ? `${length} of Pro, coming soon`
                       : `${isPro ? 'Add' : 'Buy'} ${length} of Pro`
                   }
-                  disabled={enabled !== true || busy !== null}
-                  onClick={() => void buy(pass)}
+                  disabled={enabled !== true}
+                  onClick={() => buy(pass)}
                 >
-                  {enabled === false
-                    ? 'Coming soon'
-                    : busy === pass.id
-                      ? 'One moment'
-                      : isPro && !trial
-                        ? 'Add'
-                        : 'Buy'}
+                  {enabled === false ? 'Coming soon' : isPro && !trial ? 'Add' : 'Buy'}
                 </button>
               </li>
             );
           })}
         </ul>
-      )}
-
-      {error && (
-        <p className="warn pass-status" role="alert">
-          {error}
-        </p>
-      )}
-      {paidUntil && (
-        <p className="pass-status" role="status">
-          Added. Pro now runs until {formatDate(paidUntil)}.
-        </p>
-      )}
-      {INTERNATIONAL_PAYMENTS && (
-        <button
-          type="button"
-          className="text-btn pass-currency"
-          onClick={() => {
-            storeCurrency(other);
-            setCurrency(other);
-          }}
-        >
-          Prices in {CURRENCY_SYMBOL[currency]} · Show in {CURRENCY_SYMBOL[other]}
-        </button>
       )}
 
       {!isPro && compare}
@@ -303,13 +231,18 @@ export function Pricing({ me }: { me: MeState }) {
             </div>
             <div>
               <dt>How do I pay?</dt>
-              <dd>Razorpay takes UPI, cards and netbanking. Your statement shows SAMBIT NAYAK.</dd>
+              <dd>
+                With UPI. Open your UPI app from the Buy button, pay, then enter the 12-digit
+                reference. We approve it by hand, usually within a few hours.
+              </dd>
             </div>
           </dl>
         </section>
       )}
 
       {isPro && !noEnd && compare}
+
+      <UpiPay pass={paying} onClose={() => setPaying(null)} />
     </section>
   );
 }

@@ -3,7 +3,7 @@ import { createStore } from './store';
 import { useEffect } from 'react';
 
 /**
- * Whether the server takes payments (`enabled` on /api/billing/passes). Null until it has said so,
+ * Whether the server takes payments (`upi` on /api/billing/passes). Null until it has said so,
  * or when it could not be asked; callers treat null as "carry on as before".
  */
 const open = createStore<boolean | null>(null);
@@ -20,7 +20,7 @@ export function usePaymentsOpen(): boolean | null {
     if (asked) return;
     asked = true;
     fetchPasses()
-      .then((info) => open.set(info.enabled))
+      .then((info) => open.set(info.upi))
       .catch(() => {
         asked = false; // a later mount may try again
       });

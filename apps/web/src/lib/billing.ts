@@ -1,10 +1,17 @@
+/*
+ * SHELVED: the Razorpay checkout below is not used while payments are direct UPI (see UpiPay.tsx).
+ * Kept so it can be revived; nothing in the app imports it except `fetchPasses`.
+ */
 import type { Currency, Pass } from './passes';
 import { api } from './api';
 
 export interface PassesInfo {
   currency: Currency;
   passes: { id: Pass['id']; days: number; amount: number; label: string }[];
+  /** Razorpay keys are set (shelved). */
   enabled: boolean;
+  /** A receiving UPI ID is set: direct UPI payments are open. */
+  upi: boolean;
 }
 
 /** The public price list; INR unless USD is asked for (and international payments are on). */
