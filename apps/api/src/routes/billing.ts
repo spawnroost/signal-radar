@@ -88,6 +88,7 @@ export function billingRoutes(deps: RouteDeps) {
         label: formatPrice(pass, currency),
       })),
       enabled: Boolean(razorpayKeys(env)),
+      upi: Boolean(env.UPI_VPA),
     });
   });
 

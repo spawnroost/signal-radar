@@ -15,6 +15,7 @@ import { summarizeRoutes } from './routes/summarize.js';
 import { telegramRoutes } from './routes/telegram.js';
 import { pushRoutes } from './routes/push.js';
 import { billingRoutes } from './routes/billing.js';
+import { upiRoutes } from './routes/upi.js';
 import { devRoutes } from './routes/dev.js';
 
 export interface AppDeps {
@@ -72,6 +73,7 @@ export function createApp({ db, env, net, internationalPayments }: AppDeps) {
   app.route('/api/topics', topicRoutes(deps));
   app.route('/api/summarize', summarizeRoutes(deps));
   app.route('/api/billing', billingRoutes(deps));
+  app.route('/api/upi', upiRoutes(deps));
   app.route('/api/push', pushRoutes(deps));
   app.route('/api/telegram', telegramRoutes(deps));
   if (env.NODE_ENV !== 'production') app.route('/api/dev', devRoutes(deps));

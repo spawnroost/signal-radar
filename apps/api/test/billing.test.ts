@@ -91,6 +91,7 @@ describe.skipIf(!dbAvailable)('billing (Razorpay passes)', () => {
         currency: 'INR',
         international: false,
         enabled: true,
+        upi: false,
         passes: [
           { id: 'p30', days: 30, amount: 9900, label: '₹99' },
           { id: 'p90', days: 90, amount: 24900, label: '₹249' },
