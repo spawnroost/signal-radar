@@ -36,15 +36,15 @@ constraints.
 mo-kalama is Next.js + Postgres RLS; signal-radar is Hono + Vite SPA + drizzle without RLS. Port the
 logic, not the framework code.
 
-| mo-kalama file | Use |
-| --- | --- |
-| `lib/upi.ts` | Copy `normalizeUtr`, `isValidUtr`, `UTR_LENGTH`, `upiPayLink` (pure, encodes every value). Drop VPA-QR parsing (`parseUpiQr`) and writer-VPA handling, unless admin VPA validation is wanted (`UPI_RE`, `parseUpiId`). |
-| `lib/payments.ts` lines ~215-312 | `createUpiPayment` (UTR normalise, max-pending cap, unique-violation mapping via `uniqueConstraint()`, `utrUsed` error), `approvePayment`, `rejectPayment`. Re-implement against drizzle. Cap constant is `MAX_PENDING_PER_READER = 5` in `lib/payment-shared.ts` (use 3). |
-| `drizzle/0018_upi_approval.sql` | Semantics only: approve is atomic, row-locked, idempotent (only a `pending` row moves), requires a UTR, grant happens in the same transaction. mo-kalama needs a SECURITY DEFINER SQL function only because of RLS; signal-radar has no RLS, so do it in a drizzle transaction (`SELECT ... FOR UPDATE`). Also `drizzle/0017_good_peter_quill.sql` line 3: CHECK `utr ~ '^[0-9]{12}$'`, and `drizzle/0000_schema.sql` line ~107: `payments_utr_unique`. |
-| `app/pay/page.tsx` ~lines 140-210 | How the pay link is built and the QR is rendered (`qrcode` package `QRCode.toString(link, {type:'svg'})`, white quiet zone). `app/pay/pay-form.tsx` for the UTR form. |
-| `app/admin/payments/page.tsx` | Layout reference for the admin list (UTR column, status, amount). |
-| `tests/payments.test.ts` | Port: "order code, UTR and UPI link" block (~lines 152-175, UTR strip/validate and encoded link), duplicate-UTR and bad-UTR cases (~260-293), approve once / second approve is a no-op / reject grants nothing / approve after reject is false (~lines 352-490, `approvePayment`/`rejectPayment` tests), extension-from-current-expiry case (~390-440). Skip RLS, author, e-book, donation cases. |
-| `tests/upi-gate.test.ts` | Not needed (it is about writers needing a VPA). |
+| mo-kalama file                    | Use                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `lib/upi.ts`                      | Copy `normalizeUtr`, `isValidUtr`, `UTR_LENGTH`, `upiPayLink` (pure, encodes every value). Drop VPA-QR parsing (`parseUpiQr`) and writer-VPA handling, unless admin VPA validation is wanted (`UPI_RE`, `parseUpiId`).                                                                                                                                                                                                                                  |
+| `lib/payments.ts` lines ~215-312  | `createUpiPayment` (UTR normalise, max-pending cap, unique-violation mapping via `uniqueConstraint()`, `utrUsed` error), `approvePayment`, `rejectPayment`. Re-implement against drizzle. Cap constant is `MAX_PENDING_PER_READER = 5` in `lib/payment-shared.ts` (use 3).                                                                                                                                                                              |
+| `drizzle/0018_upi_approval.sql`   | Semantics only: approve is atomic, row-locked, idempotent (only a `pending` row moves), requires a UTR, grant happens in the same transaction. mo-kalama needs a SECURITY DEFINER SQL function only because of RLS; signal-radar has no RLS, so do it in a drizzle transaction (`SELECT ... FOR UPDATE`). Also `drizzle/0017_good_peter_quill.sql` line 3: CHECK `utr ~ '^[0-9]{12}$'`, and `drizzle/0000_schema.sql` line ~107: `payments_utr_unique`. |
+| `app/pay/page.tsx` ~lines 140-210 | How the pay link is built and the QR is rendered (`qrcode` package `QRCode.toString(link, {type:'svg'})`, white quiet zone). `app/pay/pay-form.tsx` for the UTR form.                                                                                                                                                                                                                                                                                   |
+| `app/admin/payments/page.tsx`     | Layout reference for the admin list (UTR column, status, amount).                                                                                                                                                                                                                                                                                                                                                                                       |
+| `tests/payments.test.ts`          | Port: "order code, UTR and UPI link" block (~lines 152-175, UTR strip/validate and encoded link), duplicate-UTR and bad-UTR cases (~260-293), approve once / second approve is a no-op / reject grants nothing / approve after reject is false (~lines 352-490, `approvePayment`/`rejectPayment` tests), extension-from-current-expiry case (~390-440). Skip RLS, author, e-book, donation cases.                                                       |
+| `tests/upi-gate.test.ts`          | Not needed (it is about writers needing a VPA).                                                                                                                                                                                                                                                                                                                                                                                                         |
 
 ## signal-radar facts the builder needs
 
@@ -151,9 +151,9 @@ Add to `apps/api/src/env.ts` (all optional strings), `.env.example`, `deploy/env
 ## Telegram callback handling
 
 1. `packages/core/src/digest/telegram.ts`: add `sendMessageWithButtons(fetchFn, token, chatId, text,
-   buttons)` that returns the sent `message_id` (needs `reply_markup: {inline_keyboard: [[{text, callback_data}, ...]]}`;
+buttons)` that returns the sent `message_id` (needs `reply_markup: {inline_keyboard: [[{text, callback_data}, ...]]}`;
    `postMessage` currently discards the response, so parse `result.message_id`), `answerCallbackQuery(fetchFn,
-   token, id, text)` and `editMessageText(fetchFn, token, chatId, messageId, text)` (omitting `reply_markup`
+token, id, text)` and `editMessageText(fetchFn, token, chatId, messageId, text)` (omitting `reply_markup`
    removes the buttons). Callback data: `upi:a:<uuid>` / `upi:r:<uuid>` (42 bytes, under the 64-byte limit).
 2. Alert text (plain, no emoji): `UPI payment pending`, user email, pass (`30 days, Rs 99`), UTR, note, and a
    link to `<WEB_ORIGIN>/admin`. Buttons "Approve" / "Reject". Store the returned message id in
@@ -178,14 +178,15 @@ Add to `apps/api/src/env.ts` (all optional strings), `.env.example`, `deploy/env
 ## New and changed files
 
 New:
+
 - `packages/core/src/upi.ts` (+ export from `packages/core/src/index.ts`): `normalizeUtr`, `isValidUtr`,
   `upiPayLink` (amount as rupees, e.g. `99` or `99.00`; build from paise), `shortUserId(id)` (first 6 chars
   uppercased, strip non-alphanumerics), `upiNote(userId, passId)` -> `SR-<short>-<passId>`.
 - `packages/db/src/upi.ts` (export from `index.ts`): `createPayment(db, userId, passId, rawUtr, note, now)`,
   `approvePayment(db, id, decidedBy, now)`, `rejectPayment(db, id, decidedBy, now)`, `listPayments(db,
-  {status?, userId?})`. Approve = one transaction: `SELECT ... FOR UPDATE` the payment; if not `pending`
+{status?, userId?})`. Approve = one transaction: `SELECT ... FOR UPDATE` the payment; if not `pending`
   return null; set `approved`, `decided_at/by`; lock the `subscription` row; `extendUntil(currentPeriodEnd, now,
-  days)`; upsert subscription `{plan:'pro', status:'active', provider:'upi', currentPeriodEnd}`; return the
+days)`; upsert subscription `{plan:'pro', status:'active', provider:'upi', currentPeriodEnd}`; return the
   new end. Put the grant itself in ONE exported function `grantPayment(tx, paymentId, decidedBy, now)`
   (lock row, only `pending` -> `approved`, extend subscription with `provider` copied from the payment row);
   `approvePayment` (admin web + Telegram) calls it, and a future webhook calls the same function. Nothing else
@@ -206,7 +207,7 @@ New:
   `POST /payments/:id/approve`, `POST /payments/:id/reject` (approve returns new `currentPeriodEnd`; 409 if
   already decided). Share the decide-and-notify code with the Telegram handler in
   `apps/api/src/payments/notify.ts` (`notifyAdminPending`, `notifyUserDecision`; uses `deps.net?.fetch ??
-  createFetch(10_000)`, `createPushSender(env)` for push fallback).
+createFetch(10_000)`, `createPushSender(env)` for push fallback).
 - `GET /api/me` (`apps/api/src/routes/me.ts`): add `isAdmin` boolean; web `apps/web/src/lib/me.ts` type too.
 - `/api/billing/passes` (`billing.ts`): add `upi: Boolean(env.UPI_VPA)` to the response; keep the rest so the
   shelved Razorpay tests still pass.
@@ -222,6 +223,7 @@ New:
   `apps/cli/src/index.ts` new `radar remind [--days N] [--dry-run]`; `deploy/cron.sh` new daily slot.
 
 Changed:
+
 - `apps/web/src/components/Pricing.tsx`: remove Razorpay `buy()` flow, `loadCheckout/openCheckout`, USD toggle
   and `CHECKOUT_INK`; tapping a pass (signed in) opens `UpiPay`; signed out keeps the existing gate. FAQ copy.
 - `apps/web/src/lib/payments.ts`: `usePaymentsOpen` reads `info.upi` instead of `info.enabled`.
@@ -245,12 +247,12 @@ sheet, button, input and error-text classes; no new colour accents.
 
 - `findExpiringPro(db, now, days)`: subscriptions with `plan='pro'`, `status IN ('active','canceled')`,
   `current_period_end` between `now` and `now + days`, and (`expiry_reminder_for IS NULL OR
-  expiry_reminder_for <> current_period_end`). Trials (`status='trialing'`) are excluded.
+expiry_reminder_for <> current_period_end`). Trials (`status='trialing'`) are excluded.
 - `radar remind`: for each row, send text "Your Signal Radar Pro ends on <date>. Add days at
   <WEB_ORIGIN>/pricing" to `user_config.telegram_chat_id` via `sendMessage` if set; else push via
   `createPushSender` + `sendPush` to that user's `push_subscription` rows (delete `gone` endpoints as the
   existing run code does). Only if something was actually delivered, set `expiry_reminder_for =
-  current_period_end`. Paying again changes `current_period_end`, so the next period gets a fresh reminder.
+current_period_end`. Paying again changes `current_period_end`, so the next period gets a fresh reminder.
 - `deploy/cron.sh`: add `REMIND_AT` (default `09:00`) handled like `RADAR_AT`:
   `pnpm radar remind || log "remind failed"`. Add the var to compose cron env and `deploy/README.md`.
 
