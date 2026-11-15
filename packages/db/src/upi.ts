@@ -127,6 +127,18 @@ export async function rejectPayment(
   return rows.length > 0;
 }
 
+/** Remembers the admin alert's Telegram message id so it can be edited after a decision. */
+export async function setPaymentTelegramMessage(
+  db: Db,
+  id: string,
+  messageId: number,
+): Promise<void> {
+  await db
+    .update(schema.payment)
+    .set({ telegramMessageId: messageId })
+    .where(eq(schema.payment.id, id));
+}
+
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function listPayments(

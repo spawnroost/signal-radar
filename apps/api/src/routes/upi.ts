@@ -6,6 +6,7 @@ import { createPayment, listPayments } from '@radar/db';
 import type { AppVars, RouteDeps } from '../app.js';
 import { parseBody, parseQuery } from '../http.js';
 import { requireAuth } from '../middleware.js';
+import { notifyAdminPending } from '../payments/notify.js';
 import { createLimiter } from './search.js';
 
 export const UPI_SUBMITS_PER_MINUTE = 10;
@@ -70,6 +71,8 @@ export function upiRoutes(deps: RouteDeps) {
           });
       }
     }
+    // Never throws: a Telegram failure is logged inside and the submit still succeeds.
+    await notifyAdminPending(deps, result.id);
     return c.json({ id: result.id, status: 'pending' as const }, 201);
   });
 
