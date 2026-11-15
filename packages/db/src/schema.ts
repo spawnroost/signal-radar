@@ -2,6 +2,7 @@ import { sql } from 'drizzle-orm';
 import type { CreatorProfile, Currency, PassId, TopicSource } from '@radar/core';
 import {
   boolean,
+  check,
   index,
   integer,
   jsonb,
@@ -10,6 +11,7 @@ import {
   real,
   text,
   timestamp,
+  unique,
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
@@ -92,7 +94,7 @@ export const verification = pgTable(
 
 export type Plan = 'free' | 'pro';
 export type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'canceled' | 'none';
-export type SubscriptionProvider = 'lemonsqueezy' | 'stub' | 'razorpay';
+export type SubscriptionProvider = 'lemonsqueezy' | 'stub' | 'razorpay' | 'upi' | 'instamojo';
 
 export type PassPurchaseStatus = 'created' | 'paid' | 'failed';
 
@@ -117,6 +119,53 @@ export const passPurchase = pgTable(
   (t) => [index('pass_purchase_user_idx').on(t.userId)],
 );
 
+export type PaymentProvider = 'upi' | 'instamojo';
+export type PaymentStatus = 'pending' | 'approved' | 'rejected';
+
+/**
+ * One payment for a Pro pass. Generic (not UPI-only) so a second provider needs no table change.
+ * Amount is in paise and always comes from PASSES server-side. Grants go through one function.
+ */
+export const payment = pgTable(
+  'payment',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    passId: text('pass_id').$type<PassId>().notNull(),
+    days: integer('days').notNull(),
+    amount: integer('amount').notNull(),
+    provider: text('provider').$type<PaymentProvider>().notNull().default('upi'),
+    /** Gateway payment/request id (instamojo); null for upi. */
+    providerRef: text('provider_ref'),
+    /** 12-digit UTR; required for provider 'upi', null otherwise. */
+    utr: text('utr'),
+    /** The tn= value, e.g. SR-A1B2C3-p30. */
+    note: text('note').notNull(),
+    status: text('status').$type<PaymentStatus>().notNull().default('pending'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    decidedAt: timestamp('decided_at', { withTimezone: true }),
+    /** Admin user id, or 'telegram:<chatId>'. */
+    decidedBy: text('decided_by'),
+    /** Admin alert message id, so it can be edited after a decision. */
+    telegramMessageId: integer('telegram_message_id'),
+  },
+  (t) => [
+    unique('payment_utr_unique').on(t.utr),
+    unique('payment_provider_ref_unique').on(t.provider, t.providerRef),
+    check('payment_utr_format', sql`${t.utr} IS NULL OR ${t.utr} ~ '^[0-9]{12}$'`),
+    check('payment_upi_needs_utr', sql`${t.provider} <> 'upi' OR ${t.utr} IS NOT NULL`),
+    check('payment_provider_check', sql`${t.provider} IN ('upi','instamojo')`),
+    check('payment_status_check', sql`${t.status} IN ('pending','approved','rejected')`),
+    index('payment_user_idx').on(t.userId),
+    index('payment_status_idx').on(t.status, t.createdAt),
+  ],
+);
+
+export type UpiPaymentRow = typeof payment.$inferSelect;
+export type NewUpiPaymentRow = typeof payment.$inferInsert;
+
 export const subscription = pgTable('subscription', {
   id: uuid('id').defaultRandom().primaryKey(),
   userId: text('user_id')
@@ -130,6 +179,8 @@ export const subscription = pgTable('subscription', {
   provider: text('provider').$type<SubscriptionProvider>().notNull().default('stub'),
   providerCustomerId: text('provider_customer_id'),
   providerSubscriptionId: text('provider_subscription_id'),
+  /** The period end we already sent an expiry reminder for, so it fires once per period. */
+  expiryReminderFor: timestamp('expiry_reminder_for', { withTimezone: true }),
   updatedAt: timestamp('updated_at', { withTimezone: true })
     .defaultNow()
     .$onUpdate(() => new Date())
