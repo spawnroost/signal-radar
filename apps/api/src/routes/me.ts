@@ -151,7 +151,7 @@ export function meRoutes(deps: RouteDeps) {
     return c.json({ config: cfg && publicConfig(cfg) });
   });
 
-  r.post('/telegram/link', requirePro(deps), async (c) => {
+  r.post('/telegram/link', async (c) => {
     const username = deps.env.TELEGRAM_BOT_USERNAME;
     if (!telegramAvailable(deps.env) || !username) {
       return c.json({ error: 'Telegram is not configured' }, 503);

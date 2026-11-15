@@ -379,7 +379,7 @@ describe('runForUsers', () => {
       expect(out.users[0]).toMatchObject({
         userId: 'free',
         queued: 10,
-        digestSent: false,
+        digestSent: true,
         pushSent: 0,
       });
       expect(out.users[0]?.notion).toBeUndefined();

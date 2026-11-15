@@ -39,8 +39,11 @@ export interface CustomFeed {
   title: string;
 }
 
-/** Free accounts: no AI, at most this many new items per run, no digest or integrations. */
+/** Free accounts: no AI, at most this many new items per run, a plain Telegram digest, no push or integrations. */
 export const FREE_TOP_N = 10;
+
+/** Last line of a free user's Telegram digest. */
+export const FREE_DIGEST_FOOTER = 'Pro adds a hook, an angle and a title draft for each story.';
 
 /** A signed-in user the run works for: Pro, or a free account with topics. */
 export interface RadarUser {
@@ -188,7 +191,6 @@ export async function runForUsers(
             ...u,
             topN: Math.min(u.topN, FREE_TOP_N),
             customFeeds: [],
-            telegramChatId: null,
             pushSubscriptions: [],
             notion: null,
           }
@@ -299,6 +301,7 @@ export async function runForUsers(
             { ...env, TELEGRAM_CHAT_ID: user.telegramChatId },
             delivered.slice(0, config.digest.top),
             res.queued,
+            user.plan === 'free' ? FREE_DIGEST_FOOTER : undefined,
           );
         } catch (e) {
           uwarn(`telegram: ${(e as Error).message}`);

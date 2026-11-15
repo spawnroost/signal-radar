@@ -5,7 +5,7 @@ const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replac
 const attr = (s: string) => esc(s).replace(/"/g, '&quot;');
 
 /** HTML message for the Telegram Bot API (limit 4096 chars; the top items stay well under it). */
-export function formatDigest(items: Enriched[], created: number): string {
+export function formatDigest(items: Enriched[], created: number, footer?: string): string {
   const lines = [`<b>Signal Radar</b>: ${created} new, top ${items.length}`];
   items.forEach((it, i) => {
     const score = it.ai ? String(Math.round(it.ai.score)) : it.score.toFixed(0);
@@ -14,7 +14,8 @@ export function formatDigest(items: Enriched[], created: number): string {
     if (it.ai) lines.push(esc(it.ai.hook));
     lines.push(`<a href="${attr(it.url)}">${esc(new URL(it.url).hostname)}</a>`);
   });
-  return lines.join('\n').slice(0, 4000);
+  const body = lines.join('\n').slice(0, 3800);
+  return footer ? `${body}\n\n<i>${esc(footer)}</i>` : body;
 }
 
 /** A Bot API failure. Carries the HTTP status but never the URL (it holds the bot token). */
@@ -61,13 +62,14 @@ export async function sendDigest(
   env: Record<string, string | undefined>,
   items: Enriched[],
   created: number,
+  footer?: string,
 ): Promise<boolean> {
   const token = env.TELEGRAM_BOT_TOKEN;
   const chatId = env.TELEGRAM_CHAT_ID;
   if (!token || !chatId || items.length === 0) return false;
   await postMessage(fetchFn, token, {
     chat_id: chatId,
-    text: formatDigest(items, created),
+    text: formatDigest(items, created, footer),
     parse_mode: 'HTML',
     link_preview_options: { is_disabled: true },
   });

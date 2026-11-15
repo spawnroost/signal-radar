@@ -8,25 +8,21 @@ import { LineSkeleton } from './Skeletons';
 const POLL_MS = 3000;
 const POLL_LIMIT_MS = 2 * 60 * 1000;
 
-/** Pro-only alert channels. Actions here apply at once; they are not part of "Save changes". */
+/** Alert channels: Telegram for everyone, web push for Pro. Actions apply at once, outside "Save changes". */
 export function Notifications({ me }: { me: Me }) {
+  const pro = me.subscription.isPro;
   return (
     <section className="settings-sec" aria-labelledby="set-notify">
       <h3 id="set-notify" className="sheet-h">
         Notifications
       </h3>
-      {me.subscription.isPro ? (
-        <>
-          <p className="hint">Hear about new queue items without opening the app.</p>
-          <PushRow />
-          {me.telegramAvailable && <TelegramRow connected={me.telegramConnected} />}
-        </>
+      <p className="hint">Hear about new queue items without opening the app.</p>
+      {me.telegramAvailable && <TelegramRow connected={me.telegramConnected} pro={pro} />}
+      {pro ? (
+        <PushRow />
       ) : (
         <>
-          <p className="hint">
-            Get a push on this device or a Telegram message when new items land in your queue. This
-            is part of Pro.
-          </p>
+          <p className="hint">Pro adds a push on this device when new items land in your queue.</p>
           <UpgradeLink>See Pro</UpgradeLink>
         </>
       )}
@@ -116,7 +112,7 @@ function PushRow() {
 
 type Wait = 'idle' | 'waiting' | 'timeout';
 
-function TelegramRow({ connected }: { connected: boolean }) {
+function TelegramRow({ connected, pro }: { connected: boolean; pro: boolean }) {
   const [wait, setWait] = useState<Wait>('idle');
   const [url, setUrl] = useState('');
   const [busy, setBusy] = useState(false);
@@ -184,7 +180,9 @@ function TelegramRow({ connected }: { connected: boolean }) {
                 ? 'Waiting for you to press Start in Telegram.'
                 : wait === 'timeout'
                   ? 'Still not connected. The link may have expired, so start again.'
-                  : 'Get the digest as a Telegram message after each run.'}
+                  : pro
+                    ? 'Get the digest as a Telegram message after each run.'
+                    : 'Get your top 5 stories as a Telegram message after each run.'}
           </p>
           {wait === 'waiting' && url && (
             <a className="link" href={url} target="_blank" rel="noopener noreferrer">

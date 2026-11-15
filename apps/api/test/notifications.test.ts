@@ -146,7 +146,7 @@ describe.skipIf(!dbAvailable)('notifications', () => {
       expect(after.telegramConnected).toBe(true);
     });
 
-    it('link: 503 when the bot is not configured, needs Pro, replaces old tokens, expires in 15 min', async () => {
+    it('link: 503 when the bot is not configured, free users too, replaces old tokens, expires in 15 min', async () => {
       const b = await signUp(bare.app, 'b@example.com');
       expect(
         (await call(bare.app, '/api/me/telegram/link', { method: 'POST', user: b })).status,
@@ -165,7 +165,7 @@ describe.skipIf(!dbAvailable)('notifications', () => {
       await makeFree(full, u);
       expect(
         (await call(full.app, '/api/me/telegram/link', { method: 'POST', user: u })).status,
-      ).toBe(402);
+      ).toBe(200);
     });
 
     it('webhook: 404 without a configured secret, 401 on a wrong or missing header', async () => {

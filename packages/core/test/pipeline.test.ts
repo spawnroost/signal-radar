@@ -31,8 +31,17 @@ describe('runPipeline', () => {
     expect(out.results.find((r) => r.source.name === 'Broken')?.error).toMatch(/500/);
     // all 6 GamingOnLinux items survive even without keyword hits
     expect(out.results.find((r) => r.source.name === 'GamingOnLinux')?.items).toHaveLength(6);
+    // Ranked best first, except where mixSources breaks up a run from one source.
     const scores = out.items.map((i) => i.score);
-    expect(scores).toEqual([...scores].sort((a, b) => b - a));
+    expect(scores[0]).toBe(Math.max(...scores));
+    out.items.forEach((it, i) => {
+      if (i < 2) return;
+      const run = [out.items[i - 2], out.items[i - 1], it].map((x) => x?.sourceKind);
+      if (new Set(run).size === 1) {
+        // Allowed only when no other source was left to take the slot.
+        expect(out.items.slice(i).every((x) => x.sourceKind === it.sourceKind)).toBe(true);
+      }
+    });
   });
 
   it('drops already-seen items', async () => {

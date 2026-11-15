@@ -25,6 +25,7 @@ export const FREE_FEATURES: readonly string[] = [
   'With an account: an Ideas queue of up to 10 new stories a run, ranked by your topics',
   'Save any link to Ideas, up to 10 a day',
   '3 new page summaries a day; ones already read are free',
+  'A Telegram digest of your top 5 stories after each run',
 ];
 
 export const PRO_FEATURES: readonly string[] = [
@@ -32,7 +33,7 @@ export const PRO_FEATURES: readonly string[] = [
   'A hook, an angle and a title draft written for each queued story',
   'An Ideas queue that learns from what you pick and skip',
   'Your own RSS feeds',
-  'A Telegram digest, web push and Notion sync',
+  'The full Telegram digest with hooks, web push and Notion sync',
 ];
 
 /** One row of the Free vs Pro table on the Pricing page: text for a limit, true for included. */
@@ -50,5 +51,6 @@ export const COMPARE: readonly CompareRow[] = [
   { label: 'A hook, an angle and a title draft for each queued story', free: false, pro: true },
   { label: 'A queue that learns from what you pick and skip', free: false, pro: true },
   { label: 'Your own RSS feeds', free: false, pro: true },
-  { label: 'A Telegram digest, web push and Notion sync', free: false, pro: true },
+  { label: 'Telegram digest', free: 'Top 5, titles', pro: 'With hooks and angles' },
+  { label: 'Web push and Notion sync', free: false, pro: true },
 ];

@@ -37,6 +37,11 @@ describe('telegram digest', () => {
     expect(t).toContain('href="https://example.com/a?x=1&amp;y=&quot;2&quot;"');
   });
 
+  it('adds an escaped footer only when given one', () => {
+    expect(formatDigest([item], 3)).not.toContain('<i>');
+    expect(formatDigest([item], 3, 'Pro & more')).toMatch(/\n\n<i>Pro &amp; more<\/i>$/);
+  });
+
   it('skips quietly without credentials', async () => {
     let called = false;
     const f = async () => {

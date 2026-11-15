@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { normalizeItem } from '../src/normalize.js';
 import { prefilter } from '../src/prefilter.js';
-import { rank, rankScore } from '../src/rank.js';
+import { mixSources, momentumRanks, rank, rankScore } from '../src/rank.js';
 import { NOW, niches } from './helpers.js';
 
 const mk = (title: string, snippet = '', extra: { points?: number; ageH?: number } = {}) =>
@@ -67,8 +67,58 @@ describe('rank', () => {
   });
 
   it('rankScore grows with both inputs', () => {
-    expect(rankScore(3, 10)).toBeGreaterThan(rankScore(3, 1));
-    expect(rankScore(6, 1)).toBeGreaterThan(rankScore(3, 1));
+    expect(rankScore(3, 0.9)).toBeGreaterThan(rankScore(3, 0.1));
+    expect(rankScore(6, 0.5)).toBeGreaterThan(rankScore(3, 0.5));
+  });
+
+  it('ranks momentum within each source, so a busy source cannot flood the top', () => {
+    const items = [
+      ...Array.from({ length: 6 }, (_, i) => ({
+        ...mk(`repo ${i}`, ''),
+        sourceKind: 'github' as const,
+        momentum: { perHour: 80 + i },
+      })),
+      { ...mk('hn top', ''), sourceKind: 'hn' as const, momentum: { perHour: 15 } },
+      { ...mk('hn low', ''), sourceKind: 'hn' as const, momentum: { perHour: 1 } },
+      { ...mk('rss post', ''), sourceKind: 'rss' as const, momentum: { perHour: 0 } },
+    ];
+    const ranks = momentumRanks(items);
+    expect(ranks.get(items[6]!)).toBe(1);
+    expect(ranks.get(items[5]!)).toBe(1);
+    expect(ranks.get(items[8]!)).toBe(0.5);
+    const out = rank(
+      items.map((item) => ({ item, keywordScore: 0, niches: [] })),
+      9,
+    );
+    expect(out.map((x) => x.title)).toEqual([
+      'hn top',
+      'repo 5',
+      'repo 4',
+      'rss post',
+      'repo 3',
+      'repo 2',
+      'hn low',
+      'repo 1',
+      'repo 0',
+    ]);
+  });
+
+  it('mixSources caps runs at two and a source at 40% of the top 20', () => {
+    const list = [
+      ...Array.from({ length: 30 }, (_, i) => ({ id: `g${i}`, sourceKind: 'github' })),
+      ...Array.from({ length: 30 }, (_, i) => ({ id: `h${i}`, sourceKind: 'hn' })),
+      ...Array.from({ length: 30 }, (_, i) => ({ id: `r${i}`, sourceKind: 'reddit' })),
+    ];
+    const out = mixSources(list);
+    expect(out).toHaveLength(90);
+    const top = out.slice(0, 20);
+    expect(top.filter((x) => x.sourceKind === 'github')).toHaveLength(8);
+    expect(top.slice(0, 3).map((x) => x.id)).toEqual(['g0', 'g1', 'h0']);
+    for (let i = 2; i < 20; i++) {
+      expect(
+        new Set([top[i - 2], top[i - 1], top[i]].map((x) => x?.sourceKind)).size,
+      ).toBeGreaterThan(1);
+    }
   });
 
   it('computes perHour from points and age (floored at 1h)', () => {
