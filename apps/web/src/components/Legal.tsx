@@ -59,8 +59,13 @@ export function Terms() {
 
       <h3 className="sheet-h">Passes and payment</h3>
       <p>
-        Pro is a one-time pass: {PRICE.allPasses}. Razorpay takes the payment. There is no
-        subscription and no auto-renew.
+        Pro is a one-time pass: {PRICE.allPasses}. Prices are in Indian rupees (INR) and you pay by
+        UPI. There is no subscription and no auto-renew.
+      </p>
+      <p>
+        We check each payment by hand. After you pay, you enter the 12-digit UPI reference, and Pro
+        is added once we have matched it to the money received, usually within a few hours. If a
+        payment is rejected, you can send it again with a new reference.
       </p>
       <p>
         Buying again adds the new days to the end of your current Pro time, or starts from today if
@@ -108,8 +113,8 @@ export function Privacy() {
   return (
     <Policy title="Privacy">
       <p className="lede">
-        Short version: we keep what we need to run your account, and we never see your card or UPI
-        details.
+        Short version: we keep what we need to run your account, and we do not ask for your card or
+        bank details.
       </p>
 
       <h3 className="sheet-h">What we store</h3>
@@ -121,9 +126,10 @@ export function Privacy() {
 
       <h3 className="sheet-h">Payments</h3>
       <p>
-        Passes are paid through Razorpay. Card and UPI details are handled by Razorpay and are never
-        sent to or stored by Signal Radar. We keep only which pass you bought and when it was paid,
-        so we can add the days and answer refund requests.
+        Passes are paid by UPI, directly to us. You pay in your own UPI app, so your PIN and bank
+        details never reach Signal Radar. We keep the pass you chose, the amount, the 12-digit UPI
+        reference you typed in, and whether we approved or rejected it, so we can add the days and
+        answer refund requests.
       </p>
 
       <h3 className="sheet-h">AI summaries</h3>
@@ -166,8 +172,8 @@ export function Refunds() {
         <Link to="contact" className="link">
           Email us
         </Link>{' '}
-        within 7 days of buying a Pro pass and we will refund it in full to the original payment
-        method. Razorpay processes the refund; your bank may take a few days to show it.
+        within 7 days of buying a Pro pass and we will refund it in full. Refunds are made by hand
+        and sent to your UPI ID, and your bank may take a few days to show it.
       </p>
       <p>
         After 7 days, passes are not refundable. This does not affect any rights you have under the
@@ -176,8 +182,8 @@ export function Refunds() {
 
       <h3 className="sheet-h">No auto-renew</h3>
       <p>
-        Passes are one-time payments. Nothing renews itself, so there is no subscription to cancel.
-        When a pass ends, you stay on the free plan.
+        Passes are one-time UPI payments in INR. Nothing renews itself, so there is no subscription
+        to cancel. When a pass ends, you stay on the free plan.
       </p>
 
       <h3 className="sheet-h">Contact</h3>

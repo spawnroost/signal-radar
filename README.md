@@ -59,7 +59,10 @@ The web dev server proxies `/api` to the API, so run both. Sign up in the browse
 To fill that user's queue, run `pnpm radar run`. With no `DEEPSEEK_API_KEY` it uses the `none` provider, so you get
 keyword-ranked items without hooks.
 
-Payments use Razorpay prepaid passes. Without Razorpay keys, the Buy buttons are hidden and payments are closed.
+Payments are one-time Pro passes paid by UPI (INR only, no auto-renew). The user pays in their UPI app and submits
+the 12-digit UTR; an admin approves it by hand (Telegram buttons or `/admin`). Without `UPI_VPA` the Buy buttons are
+hidden and payments are closed; `ADMIN_EMAILS` picks who can approve. Razorpay support is shelved: the code stays but
+is unreachable (its keys are not passed to the API container in production).
 To make a user Pro locally, use `pnpm radar user:pro --email you@example.com`.
 
 Checks:

@@ -53,8 +53,22 @@ If Cloudflare's proxy blocks the first ACME HTTP-01 challenge, set the record DN
 6. Telegram, if `TELEGRAM_BOT_TOKEN` is set (the bot uses a webhook):
    `docker compose --env-file .env run --rm cron pnpm radar telegram:webhook https://signalradar.spawnroost.com`
    (needs `TELEGRAM_WEBHOOK_SECRET` in `.env`; `--delete` removes it).
-7. Later: Razorpay webhook `https://signalradar.spawnroost.com/api/billing/webhook` (secret in `.env`); Google and
-   GitHub OAuth callbacks `https://signalradar.spawnroost.com/api/auth/callback/{google,github}`.
+7. Later: Google and GitHub OAuth callbacks `https://signalradar.spawnroost.com/api/auth/callback/{google,github}`.
+
+## UPI payments (owner steps)
+
+Payments are direct UPI, checked by hand, one-time, INR only. Razorpay is shelved: its keys are not passed to the
+API container, so the old routes stay dead.
+
+1. Put these in `/opt/signalradar/.env` on the server only (never in the repo): `UPI_VPA` (your receiving UPI ID;
+   unset = payments closed), `ADMIN_EMAILS` (your login email, comma-separated for more). Optional:
+   `UPI_PAYEE_NAME`, `TELEGRAM_ADMIN_CHAT_ID`. Without the chat id, alerts go to the Telegram chat the admin linked
+   in Settings, so sign in as the admin and connect Telegram first.
+2. Run `deploy/ship.sh` so the API picks up the env.
+3. Re-run the Telegram webhook so the Approve / Reject buttons are delivered (it now allows `callback_query`):
+   `docker compose --env-file .env run --rm cron pnpm radar telegram:webhook https://signalradar.spawnroost.com`.
+4. Test: pay the 99 pass yourself from a second account, approve it in `/admin` or from the Telegram message, check
+   Pro, then refund yourself by hand in your UPI app. Rejected payments can be resubmitted with a new UTR.
 
 ## Update
 

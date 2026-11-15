@@ -17,7 +17,7 @@ export default defineConfig({
   // Owner: fill these in before going live. They appear on the Terms, Privacy, Refunds and Contact pages.
   legalName: 'Sambit Nayak',
   contactEmail: 'support@spawnroost.com',
-  // Turn on once international (USD) payments are enabled on the Razorpay account.
+  // USD is not offered: payments are UPI (INR) only. Only meaningful if Razorpay is ever revived (shelved).
   internationalPayments: false,
 
   niches: [

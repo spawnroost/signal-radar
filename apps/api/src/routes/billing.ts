@@ -62,7 +62,12 @@ function amountFor(pass: (typeof PASSES)[number], currency: Currency): number {
   return currency === 'INR' ? pass.inr : pass.usd;
 }
 
-/** Billing endpoints: prepaid Razorpay passes, plus the older stub checkout for local use. */
+/**
+ * Billing endpoints. SHELVED: `/order`, `/verify`, `/webhook` (prepaid Razorpay passes) are not used while
+ * payments are direct UPI (see routes/upi.ts). They answer 503 unless Razorpay keys are set, and the production
+ * compose file never passes those keys. Kept so Razorpay can be revived. `/passes`, `/checkout` and `/cancel`
+ * stay (the stub checkout is dev only and blocked in production).
+ */
 export function billingRoutes(deps: RouteDeps) {
   const { db, env } = deps;
   const international = deps.internationalPayments ?? radarConfig.internationalPayments;
