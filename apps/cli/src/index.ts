@@ -266,7 +266,7 @@ async function cmdTelegramWebhook(base: string | undefined, remove: boolean) {
     body = {
       url: `${url.origin}${url.pathname.replace(/\/+$/, '')}/api/telegram/webhook`,
       secret_token: secret,
-      allowed_updates: ['message'],
+      allowed_updates: ['message', 'callback_query'],
     };
   }
   // Never print the URL (it holds the bot token).

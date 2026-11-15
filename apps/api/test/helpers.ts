@@ -12,7 +12,7 @@ export const dbAvailable = await testDbAvailable();
 export async function setup(
   overrides: Record<string, string | undefined> = {},
   net?: AppDeps['net'],
-  extra: Pick<AppDeps, 'internationalPayments'> = {},
+  extra: Pick<AppDeps, 'internationalPayments' | 'push'> = {},
 ) {
   const db: Db = await openTestDb();
   const env = parseEnv({

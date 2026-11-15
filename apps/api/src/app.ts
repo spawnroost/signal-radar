@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { HTTPException } from 'hono/http-exception';
-import type { FetchFn, Resolver } from '@radar/core';
+import type { FetchFn, PushSender, Resolver } from '@radar/core';
 import type { Db } from '@radar/db';
 import { authMethods, createAuth, type Auth } from './auth.js';
 import type { ApiEnv } from './env.js';
@@ -25,6 +25,8 @@ export interface AppDeps {
   net?: { fetch?: FetchFn; resolve?: Resolver };
   /** Accept USD orders; defaults to `internationalPayments` in radar.config.ts (tests override). */
   internationalPayments?: boolean;
+  /** Overrides the Web Push sender; defaults to `web-push` when the VAPID env is set (tests inject). */
+  push?: PushSender | null;
 }
 
 export type AuthUser = Auth['$Infer']['Session']['user'];
@@ -38,7 +40,7 @@ export interface RouteDeps extends AppDeps {
   auth: Auth;
 }
 
-export function createApp({ db, env, net, internationalPayments }: AppDeps) {
+export function createApp({ db, env, net, internationalPayments, push }: AppDeps) {
   const auth = createAuth(db, env);
   const deps: RouteDeps = {
     db,
@@ -46,6 +48,7 @@ export function createApp({ db, env, net, internationalPayments }: AppDeps) {
     auth,
     ...(net ? { net } : {}),
     ...(internationalPayments !== undefined ? { internationalPayments } : {}),
+    ...(push !== undefined ? { push } : {}),
   };
   const app = new Hono<AppVars>();
 

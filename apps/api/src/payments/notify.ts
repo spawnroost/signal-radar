@@ -1,5 +1,11 @@
 import { and, eq, isNotNull, sql } from 'drizzle-orm';
-import { createFetch, sendMessageWithButtons } from '@radar/core';
+import {
+  createFetch,
+  createPushSender,
+  sendMessage,
+  sendMessageWithButtons,
+  sendPush,
+} from '@radar/core';
 import { schema, setPaymentTelegramMessage } from '@radar/db';
 import type { RouteDeps } from '../app.js';
 
@@ -87,5 +93,83 @@ export async function notifyAdminPending(deps: RouteDeps, paymentId: string): Pr
     }
   } catch (e) {
     console.error(`payment alert failed: ${(e as Error).message}`);
+  }
+}
+
+const day = (d: Date) => d.toISOString().slice(0, 10);
+
+/** The admin alert as it reads once decided (no buttons). `until` is the new Pro end for an approval. */
+export function decidedAlertText(
+  row: { email: string; days: number; amount: number; utr: string | null },
+  outcome: 'approved' | 'rejected',
+  decidedBy: string,
+  until?: Date | null,
+): string {
+  return [
+    `UPI payment ${outcome}`,
+    `User: ${row.email}`,
+    `Pass: ${row.days} days, Rs ${row.amount / 100}`,
+    `UTR: ${row.utr ?? '-'}`,
+    outcome === 'approved' && until ? `Pro until ${day(until)}` : '',
+    `By ${decidedBy}`,
+  ]
+    .filter(Boolean)
+    .join('\n');
+}
+
+/**
+ * Tells the payer the outcome: Telegram if they linked a chat, else web push if they have
+ * subscriptions. Never throws; a failure here must not undo the decision.
+ */
+export async function notifyUserDecision(
+  deps: RouteDeps,
+  paymentId: string,
+  outcome: 'approved' | 'rejected',
+  until?: Date | null,
+): Promise<void> {
+  const { db, env } = deps;
+  try {
+    const [row] = await db
+      .select({ userId: schema.payment.userId })
+      .from(schema.payment)
+      .where(eq(schema.payment.id, paymentId));
+    if (!row) return;
+    const text =
+      outcome === 'approved' && until
+        ? `Your payment was approved. Your Pro was extended to ${day(until)}.`
+        : 'Your payment could not be verified. You can submit it again with the correct UTR.';
+    const [cfg] = await db
+      .select({ chat: schema.userConfig.telegramChatId })
+      .from(schema.userConfig)
+      .where(eq(schema.userConfig.userId, row.userId));
+    if (cfg?.chat && env.TELEGRAM_BOT_TOKEN) {
+      await sendMessage(
+        deps.net?.fetch ?? createFetch(10_000),
+        env.TELEGRAM_BOT_TOKEN,
+        cfg.chat,
+        text,
+      );
+      return;
+    }
+    const sender = deps.push === undefined ? createPushSender(env) : deps.push;
+    if (!sender) return;
+    const subs = await db
+      .select()
+      .from(schema.pushSubscription)
+      .where(eq(schema.pushSubscription.userId, row.userId));
+    if (subs.length === 0) return;
+    const res = await sendPush(
+      sender,
+      subs.map((s) => ({ endpoint: s.endpoint, keys: s.keys })),
+      {
+        title: outcome === 'approved' ? 'Payment approved' : 'Payment not verified',
+        body: text,
+        url: '/',
+        tag: 'payment',
+      },
+    );
+    for (const e of res.errors) console.error(`payment push failed: ${e}`);
+  } catch (e) {
+    console.error(`payment user notify failed: ${(e as Error).message}`);
   }
 }
