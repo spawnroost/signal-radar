@@ -15,6 +15,7 @@ import {
 } from '@radar/core';
 import { schema } from '@radar/db';
 import type { AppVars, RouteDeps } from '../app.js';
+import { isAdminEmail } from '../env.js';
 import { badRequest, isPro, parseBody } from '../http.js';
 import { requireAuth, requirePro } from '../middleware.js';
 
@@ -98,6 +99,7 @@ export function meRoutes(deps: RouteDeps) {
         : null;
     return c.json({
       user: { id: u.id, name: u.name, email: u.email },
+      isAdmin: isAdminEmail(deps.env, u.email),
       proUntil,
       telegramConnected: Boolean(cfg?.telegramChatId),
       telegramAvailable: telegramAvailable(deps.env),

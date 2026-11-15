@@ -3,6 +3,7 @@ import { HTTPException } from 'hono/http-exception';
 import { eq } from 'drizzle-orm';
 import { schema } from '@radar/db';
 import type { AppVars, RouteDeps } from './app.js';
+import { isAdminEmail } from './env.js';
 import { isPro } from './http.js';
 
 export function requireAuth({ auth }: RouteDeps) {
@@ -28,6 +29,16 @@ export function requirePro({ db }: RouteDeps) {
   return createMiddleware<AppVars>(async (c, next) => {
     if (!(await userIsPro(db, c.get('user').id))) {
       throw new HTTPException(402, { message: 'Pro subscription required' });
+    }
+    await next();
+  });
+}
+
+/** Must run after requireAuth. 403 unless the signed-in user's email is in ADMIN_EMAILS. */
+export function requireAdmin({ env }: RouteDeps) {
+  return createMiddleware<AppVars>(async (c, next) => {
+    if (!isAdminEmail(env, c.get('user').email)) {
+      throw new HTTPException(403, { message: 'admin only' });
     }
     await next();
   });
