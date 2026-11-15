@@ -3,6 +3,7 @@ import type { Enriched, Feedback, FeedbackExample, RadarStore, ScoredItem } from
 import { extendUntil } from '@radar/core';
 import type { Db } from './index.js';
 import * as schema from './schema.js';
+import type { SubscriptionProvider } from './schema.js';
 
 const CHUNK = 1000;
 
@@ -12,6 +13,47 @@ function chunks<T>(xs: T[], n = CHUNK): T[][] {
   const out: T[][] = [];
   for (let i = 0; i < xs.length; i += n) out.push(xs.slice(i, i + n));
   return out;
+}
+
+export type Tx = Parameters<Parameters<Db['transaction']>[0]>[0];
+
+/**
+ * The one place a purchase extends Pro. Must run inside a transaction. Locks the user's
+ * subscription row (creating a blank one first so there is always a row to lock), adds `days`
+ * to the paid period end (or now), and marks Pro active. With `keepTrial`, a trialing user's
+ * remaining trial counts as time already owed, so the pass starts where the trial stops.
+ * Returns the new `currentPeriodEnd`.
+ */
+export async function extendSubscription(
+  tx: Tx,
+  userId: string,
+  days: number,
+  provider: SubscriptionProvider,
+  now: Date,
+  keepTrial = false,
+): Promise<Date> {
+  await tx.insert(schema.subscription).values({ userId }).onConflictDoNothing();
+  const [sub] = await tx
+    .select({
+      status: schema.subscription.status,
+      currentPeriodEnd: schema.subscription.currentPeriodEnd,
+      trialEndsAt: schema.subscription.trialEndsAt,
+    })
+    .from(schema.subscription)
+    .where(eq(schema.subscription.userId, userId))
+    // Lock the row so two grants at once both add their days.
+    .for('update');
+
+  const trialEnd = keepTrial && sub?.status === 'trialing' ? (sub.trialEndsAt ?? null) : null;
+  const paidEnd = sub?.currentPeriodEnd ?? null;
+  const base = trialEnd && (!paidEnd || trialEnd > paidEnd) ? trialEnd : paidEnd;
+
+  const currentPeriodEnd = extendUntil(base, now, days);
+  await tx
+    .update(schema.subscription)
+    .set({ plan: 'pro', status: 'active', provider, currentPeriodEnd })
+    .where(eq(schema.subscription.userId, userId));
+  return currentPeriodEnd;
 }
 
 export interface PassGrant {
@@ -49,29 +91,16 @@ export async function grantPass(
       )
       .returning({ days: schema.passPurchase.days });
 
-    const [sub] = await tx
-      .select({ currentPeriodEnd: schema.subscription.currentPeriodEnd })
-      .from(schema.subscription)
-      .where(eq(schema.subscription.userId, userId))
-      // Lock the row so two passes paid at once both add their days.
-      .for('update');
-
     // Already paid (or not this user's purchase): leave the subscription untouched.
-    if (!paid) return sub?.currentPeriodEnd ?? null;
+    if (!paid) {
+      const [sub] = await tx
+        .select({ currentPeriodEnd: schema.subscription.currentPeriodEnd })
+        .from(schema.subscription)
+        .where(eq(schema.subscription.userId, userId));
+      return sub?.currentPeriodEnd ?? null;
+    }
 
-    const currentPeriodEnd = extendUntil(sub?.currentPeriodEnd ?? null, now, paid.days);
-    const set = {
-      plan: 'pro',
-      status: 'active',
-      provider: 'razorpay',
-      currentPeriodEnd,
-    } as const;
-    await tx
-      .insert(schema.subscription)
-      .values({ userId, ...set })
-      .onConflictDoUpdate({ target: schema.subscription.userId, set });
-
-    return currentPeriodEnd;
+    return extendSubscription(tx, userId, paid.days, 'razorpay', now);
   });
 }
 
