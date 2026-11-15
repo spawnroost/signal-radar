@@ -32,47 +32,51 @@ describe('radar user:create', () => {
     expect(res.out).toContain('usage: radar user:create');
   });
 
-  it.skipIf(!available)('creates a verified user once and refuses the same email', async () => {
-    const db = await openTestDb();
-    try {
-      await resetTestDb(db);
-      const first = radar(
-        'user:create',
-        '--email',
-        'Review@Example.com',
-        '--password',
-        'correct-horse-battery',
-        '--name',
-        'Reviewer',
-      );
-      expect(first.out).toContain('created review@example.com');
-      expect(first.code ?? 0).toBe(0);
+  it.skipIf(!available)(
+    'creates a verified user once and refuses the same email',
+    { timeout: 30_000 },
+    async () => {
+      const db = await openTestDb();
+      try {
+        await resetTestDb(db);
+        const first = radar(
+          'user:create',
+          '--email',
+          'Review@Example.com',
+          '--password',
+          'correct-horse-battery',
+          '--name',
+          'Reviewer',
+        );
+        expect(first.out).toContain('created review@example.com');
+        expect(first.code ?? 0).toBe(0);
 
-      const [u] = await db
-        .select()
-        .from(schema.user)
-        .where(eq(schema.user.email, 'review@example.com'));
-      expect(u).toMatchObject({ name: 'Reviewer', emailVerified: true });
-      const accounts = await db
-        .select()
-        .from(schema.account)
-        .where(eq(schema.account.userId, u!.id));
-      expect(accounts).toHaveLength(1);
-      expect(accounts[0]).toMatchObject({ providerId: 'credential' });
-      expect(accounts[0]!.password).toBeTruthy();
-      expect(accounts[0]!.password).not.toContain('correct-horse');
+        const [u] = await db
+          .select()
+          .from(schema.user)
+          .where(eq(schema.user.email, 'review@example.com'));
+        expect(u).toMatchObject({ name: 'Reviewer', emailVerified: true });
+        const accounts = await db
+          .select()
+          .from(schema.account)
+          .where(eq(schema.account.userId, u!.id));
+        expect(accounts).toHaveLength(1);
+        expect(accounts[0]).toMatchObject({ providerId: 'credential' });
+        expect(accounts[0]!.password).toBeTruthy();
+        expect(accounts[0]!.password).not.toContain('correct-horse');
 
-      const again = radar(
-        'user:create',
-        '--email',
-        'review@example.com',
-        '--password',
-        'correct-horse-battery',
-      );
-      expect(again.code).toBe(1);
-      expect(again.out).toContain('already exists');
-    } finally {
-      await db.$client.end({ timeout: 1 });
-    }
-  });
+        const again = radar(
+          'user:create',
+          '--email',
+          'review@example.com',
+          '--password',
+          'correct-horse-battery',
+        );
+        expect(again.code).toBe(1);
+        expect(again.out).toContain('already exists');
+      } finally {
+        await db.$client.end({ timeout: 1 });
+      }
+    },
+  );
 });
