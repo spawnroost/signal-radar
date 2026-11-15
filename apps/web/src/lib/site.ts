@@ -1,6 +1,6 @@
 import { PRICE } from './tiers';
 
-export const REPO_URL = 'https://github.com/sambit24795/signal-radar';
+export const REPO_URL = 'https://github.com/spawnroost/signal-radar';
 
 export interface PageMeta {
   title: string;

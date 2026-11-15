@@ -1,5 +1,5 @@
 export const USER_AGENT =
-  'signal-radar/0.1 (personal news radar; +https://github.com/sambit24795/signal-radar)';
+  'signal-radar/0.1 (personal news radar; +https://github.com/spawnroost/signal-radar)';
 
 export type FetchFn = (url: string, init?: RequestInit) => Promise<Response>;
 

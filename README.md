@@ -45,7 +45,7 @@ TypeScript throughout, on Node 24 with pnpm workspaces.
 You need Node 24 (see `.nvmrc`), pnpm and Docker.
 
 ```sh
-git clone https://github.com/sambit24795/signal-radar.git && cd signal-radar
+git clone https://github.com/spawnroost/signal-radar.git && cd signal-radar
 pnpm install
 cp .env.example .env     # set BETTER_AUTH_SECRET at least
 pnpm db:up               # Postgres on :5432, also creates radar_test
@@ -170,7 +170,7 @@ commands, DB tunnel and restore. `docker-compose.yml` at the root is only for lo
 optional RSSHub, `docker compose --profile rsshub up -d rsshub`).
 
 If you self-host it and it saves you time, you can support the project through
-[GitHub Sponsors](https://github.com/sponsors/sambit24795). It is optional, and every feature stays free to self-host.
+[GitHub Sponsors](https://github.com/sponsors/spawnroost). It is optional, and every feature stays free to self-host.
 
 ## Layout
 
