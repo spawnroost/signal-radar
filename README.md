@@ -169,6 +169,9 @@ ready-made Docker Compose stack (Postgres, migrations, API, web, and a cron cont
 commands, DB tunnel and restore. `docker-compose.yml` at the root is only for local development (Postgres and an
 optional RSSHub, `docker compose --profile rsshub up -d rsshub`).
 
+If you self-host it and it saves you time, you can support the project through
+[GitHub Sponsors](https://github.com/sponsors/sambit24795). It is optional, and every feature stays free to self-host.
+
 ## Layout
 
 ```
