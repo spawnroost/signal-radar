@@ -77,3 +77,43 @@ export function usePendingPayment(signedIn: boolean): boolean {
   }, [signedIn]);
   return pending.use();
 }
+
+export type PaymentStatus = MyPayment['status'];
+
+export interface AdminPayment {
+  id: string;
+  userId: string;
+  email: string;
+  passId: string;
+  days: number;
+  /** Paise. */
+  amount: number;
+  provider: string;
+  utr: string | null;
+  note: string;
+  status: PaymentStatus;
+  createdAt: string;
+  decidedAt: string | null;
+  decidedBy: string | null;
+}
+
+export function fetchAdminPayments(
+  status: PaymentStatus | 'all',
+): Promise<{ payments: AdminPayment[] }> {
+  return api<{ payments: AdminPayment[] }>(`/api/admin/payments?status=${status}`);
+}
+
+export function decidePayment(
+  id: string,
+  decision: 'approve' | 'reject',
+): Promise<{ id: string; status: PaymentStatus }> {
+  return api(`/api/admin/payments/${encodeURIComponent(id)}/${decision}`, { method: 'POST' });
+}
+
+/** What the admin page says when a decision fails. A 409 means it was decided somewhere else. */
+export function decideError(e: unknown): string {
+  if (e instanceof ApiError) {
+    return e.status === 409 ? 'Already decided. The list has been refreshed.' : e.message;
+  }
+  return 'Could not reach the server. Try again.';
+}

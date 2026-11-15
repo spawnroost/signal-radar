@@ -10,6 +10,7 @@ describe('parseRoute', () => {
     expect(parseRoute('/settings').name).toBe('settings');
     expect(parseRoute('/pricing').name).toBe('pricing');
     expect(parseRoute('/signin').name).toBe('signin');
+    expect(parseRoute('/admin').name).toBe('admin');
   });
 
   it('ignores a trailing slash and falls back to Read for unknown paths', () => {
@@ -38,6 +39,10 @@ describe('parseRoute', () => {
 });
 
 describe('hrefFor', () => {
+  it('gives the admin page its own path', () => {
+    expect(hrefFor('admin')).toBe('/admin');
+  });
+
   it('round-trips through parseRoute', () => {
     for (const name of [
       'landing',

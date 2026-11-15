@@ -13,7 +13,8 @@ export type RouteName =
   | 'terms'
   | 'privacy'
   | 'refunds'
-  | 'contact';
+  | 'contact'
+  | 'admin';
 
 export interface Route {
   name: RouteName;
@@ -39,6 +40,7 @@ const PATHS: Record<RouteName, string> = {
   privacy: '/privacy',
   refunds: '/refunds',
   contact: '/contact',
+  admin: '/admin',
 };
 
 const BY_PATH = new Map<string, RouteName>(

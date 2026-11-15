@@ -8,6 +8,7 @@ import { InstallHint } from './components/InstallHint';
 import { Landing } from './components/Landing';
 import { Contact, Privacy, Refunds, Terms } from './components/Legal';
 import { Link } from './components/Link';
+import { AdminPayments } from './components/AdminPayments';
 import { Pricing } from './components/Pricing';
 import { Queue } from './components/Queue';
 import { SaveTarget } from './components/SaveTarget';
@@ -67,6 +68,7 @@ const TITLES: Record<RouteName, string> = {
   privacy: PAGE_META['/privacy'].title,
   refunds: PAGE_META['/refunds'].title,
   contact: PAGE_META['/contact'].title,
+  admin: 'Payments · Signal Radar',
 };
 
 /** Where the one-time install hint may appear: the working pages, never sign-in or the landing. */
@@ -357,6 +359,7 @@ export function App() {
       {route.name === 'privacy' && <Privacy />}
       {route.name === 'refunds' && <Refunds />}
       {route.name === 'contact' && <Contact />}
+      {route.name === 'admin' && <AdminPayments me={me} />}
       {route.name === 'signin' && (
         <SignIn me={me} startSignup={route.signup} onSignOut={() => void onSignOut()} />
       )}

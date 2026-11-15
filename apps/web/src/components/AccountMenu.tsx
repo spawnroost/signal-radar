@@ -87,6 +87,11 @@ export function AccountMenu({ me, onSignOut }: Props) {
           <Link to="settings" role="menuitem" className="menu-item" onClick={() => setOpen(false)}>
             Settings
           </Link>
+          {me.me.isAdmin && (
+            <Link to="admin" role="menuitem" className="menu-item" onClick={() => setOpen(false)}>
+              Payments
+            </Link>
+          )}
           {install && (
             <button
               type="button"

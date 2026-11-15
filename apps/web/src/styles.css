@@ -3392,3 +3392,98 @@ html[data-install-hint] .page {
     padding: var(--sp-1) var(--sp-5) var(--sp-5);
   }
 }
+
+/* ---------- admin payments ---------- */
+
+.admin-wait {
+  min-height: 40vh;
+}
+.admin-panel {
+  outline: none;
+}
+.admin-empty {
+  padding: var(--sp-5) 0;
+}
+.admin-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.admin-row {
+  display: grid;
+  gap: var(--sp-2);
+  padding: var(--sp-4) 0;
+  border-top: 1px solid var(--border);
+}
+.admin-row:first-child {
+  border-top: 0;
+}
+.admin-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+.admin-email {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-weight: 500;
+}
+.admin-what {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  font-size: var(--fs-sm);
+}
+.admin-price {
+  margin-left: auto;
+  font: 400 var(--fs-lg)/1.1 var(--serif);
+  letter-spacing: -0.01em;
+}
+.admin-utr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-3);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.admin-utr-id {
+  font: 400 var(--fs-md)/1.4 var(--mono);
+  letter-spacing: 0.04em;
+  user-select: all;
+}
+.admin-note {
+  font-family: var(--mono);
+  overflow-wrap: anywhere;
+}
+.admin-actions {
+  display: flex;
+  gap: var(--sp-2);
+  margin-top: var(--sp-1);
+}
+.admin-actions .btn,
+.admin-utr .btn {
+  min-height: 44px;
+}
+.admin-actions .btn {
+  flex: 1;
+}
+.admin-confirm {
+  display: grid;
+  gap: var(--sp-2);
+}
+.admin-confirm-text {
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+}
+@media (min-width: 768px) {
+  .admin-actions {
+    justify-content: flex-start;
+  }
+  .admin-actions .btn {
+    flex: 0 0 auto;
+    min-width: 128px;
+  }
+}
