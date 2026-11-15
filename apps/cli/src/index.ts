@@ -7,6 +7,7 @@ import { eq } from 'drizzle-orm';
 import { parseEnv } from '@radar/api/env';
 import { createPasswordUser } from '@radar/api/users';
 import { createDb, createPgStore, runMigrations, schema, type Db } from '@radar/db';
+import { remindDepsFromEnv, remindExpiring } from './remind.js';
 import {
   buildSources,
   createNotionClient,
@@ -29,6 +30,7 @@ const USAGE = `usage:
   radar user:create --email <e> --password <p> [--name <n>]
                                         make a verified email+password user (refuses an existing email)
   radar notion:init --parent <pageId>   create the Topic Queue database, print its id
+  radar remind                          remind paid Pro users 3 days before expiry (Telegram, else push; needs WEB_ORIGIN)
   radar telegram:webhook <publicBaseUrl>  point the bot at <base>/api/telegram/webhook (needs TELEGRAM_BOT_TOKEN, TELEGRAM_WEBHOOK_SECRET)
   radar telegram:webhook --delete       remove the bot webhook
 
@@ -113,6 +115,20 @@ async function cmdRunDb(values: { config: string }) {
       );
     }
     if (res.users.some((u) => u.error)) process.exitCode = 1;
+  } finally {
+    await db.$client.end({ timeout: 5 });
+  }
+}
+
+async function cmdRemind() {
+  const deps = remindDepsFromEnv(process.env);
+  const db = openDb();
+  try {
+    const r = await remindExpiring(db, deps);
+    console.log(
+      `remind: ${r.due} due, ${r.sent} sent, ${r.skipped} skipped (no channel), ${r.failed} failed`,
+    );
+    if (r.failed > 0) process.exitCode = 1;
   } finally {
     await db.$client.end({ timeout: 5 });
   }
@@ -313,6 +329,7 @@ async function main() {
   if (existsSync('.env')) process.loadEnvFile('.env');
   if (values.help || !cmd) return void console.log(USAGE);
   if (cmd === 'run') return values.dry || values.local ? cmdRun(values) : cmdRunDb(values);
+  if (cmd === 'remind') return cmdRemind();
   if (cmd === 'db:migrate') return cmdMigrate();
   if (cmd === 'user:list') return cmdUserList();
   if (cmd === 'user:pro') return cmdUserPro(values);

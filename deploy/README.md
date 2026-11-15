@@ -7,7 +7,7 @@ sent over SSH: no registry, no GitHub Actions.
 ```
 postgres (volume pgdata, not published) -> migrate (one-shot) -> api :8787   (alias signalradar-api)
                                                                -> web :8080   (alias signalradar-web)
-                                                               -> cron        (radar run 03:00 + 15:00 UTC, backup 02:00 UTC)
+                                                               -> cron        (radar run 03:00 + 15:00 UTC, remind 09:00 UTC, backup 02:00 UTC)
 ```
 
 api and web are also bound to `127.0.0.1:18787` / `127.0.0.1:18080` on the server for `curl` debugging
@@ -72,6 +72,9 @@ Free disk occasionally: `docker image prune -a --filter until=720h`.
 - Status / logs: `ps`, `logs -f --tail=200 api cron`, `logs migrate`.
 - Run a CLI command: `run --rm cron pnpm radar user:list`, `run --rm cron pnpm radar run`,
   `run --rm cron pnpm radar user:pro --email a@b.c`.
+- Expiry reminders: `radar remind` runs daily at `REMIND_AT` (UTC, default 09:00). It messages paid Pro users
+  3 days before their period ends (Telegram if linked, else web push; users with neither are skipped) and
+  links to `/pricing`. Once per period; run it by hand with `run --rm cron pnpm radar remind`.
 - psql: `exec postgres psql -U radar -d radar`.
 - DB tunnel: `--profile tunnel up -d db-tunnel`, then from your machine
   `ssh -L 5433:127.0.0.1:15432 <user>@<vps>` and connect to `localhost:5433` (user radar). Stop it with

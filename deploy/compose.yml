@@ -61,6 +61,7 @@ x-cron-env: &cron-env
   VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
   VAPID_SUBJECT: ${VAPID_SUBJECT:-}
   RADAR_AT: ${RADAR_AT:-03:00 15:00}
+  REMIND_AT: ${REMIND_AT:-09:00}
   BACKUP_AT: ${BACKUP_AT:-02:00}
   BACKUP_KEEP: ${BACKUP_KEEP:-14}
   R2_ACCOUNT_ID: ${R2_ACCOUNT_ID:-}
@@ -149,7 +150,7 @@ services:
         aliases: [signalradar-web]
     logging: *logging
 
-  # radar run at RADAR_AT (UTC) plus the nightly backup at BACKUP_AT. Dumps live in the `backups` volume.
+  # radar run at RADAR_AT, expiry reminders at REMIND_AT (UTC) plus the nightly backup at BACKUP_AT. Dumps live in the `backups` volume.
   cron:
     image: signalradar-tools:${IMAGE_TAG:-local}
     restart: unless-stopped
