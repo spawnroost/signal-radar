@@ -58,11 +58,13 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
 CMD ["node_modules/.bin/tsx", "apps/api/src/server.ts"]
 
 # ----- tools: migrate, radar CLI, cron, backups -------------------------------------
-FROM source AS tools
+# System packages sit on top of deps (not source) so source edits reuse this cached layer.
+FROM deps AS tools
 ENV NODE_ENV=production \
     npm_config_verify_deps_before_run=false
 USER root
 RUN apk add --no-cache postgresql18-client rclone \
     && mkdir -p /backups && chown node:node /backups
+COPY . .
 USER node
 CMD ["pnpm", "radar", "--help"]
