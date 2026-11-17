@@ -5,13 +5,6 @@ import type { Prefiltered } from './prefilter.js';
 const MOMENTUM_WEIGHT = 36;
 /** Momentum for sources that report no engagement (RSS, Reddit RSS): the middle of the pack. */
 const NEUTRAL = 0.5;
-/** Top of the list where the source mix is enforced. */
-const MIX_WINDOW = 20;
-/** No source fills more than this share of the mix window... */
-const MIX_SHARE = 0.4;
-/** ...or more than this many slots in a row. */
-const MAX_RUN = 2;
-
 /**
  * Ranking score: keyword relevance plus momentum, where momentum is the item's rank (0..1) among
  * items from the same source. GitHub stars and HN points are on different scales, so comparing raw
@@ -55,35 +48,23 @@ export function mixKey(it: { sourceKind: string; source?: string }): string {
 }
 
 /**
- * Reorders a score-sorted list so every block of `MIX_WINDOW` mixes sources: each slot takes the
- * best remaining item that would not make a run longer than `MAX_RUN` or push its source past
- * `MIX_SHARE` of the current block. If nothing qualifies, the best remaining item goes in anyway.
+ * Round-robin over sources so the list carries news from everywhere: every source's best item
+ * comes first (in score order), then every source's second-best, and so on. A source with many
+ * items (GitHub) fills the tail instead of the top; a quiet one (a YouTube channel, a user's own
+ * feed) still gets its best item near the top.
  */
 export function mixSources<T extends { sourceKind: string; source?: string }>(
   sorted: readonly T[],
 ): T[] {
-  const cap = Math.max(1, Math.floor(MIX_WINDOW * MIX_SHARE));
-  const rest = [...sorted];
-  const out: T[] = [];
-  let counts = new Map<string, number>();
-  const runOf = (key: string) => {
-    let n = 0;
-    for (let i = out.length - 1; i >= 0 && mixKey(out[i] as T) === key; i--) n++;
-    return n;
-  };
-  while (rest.length > 0) {
-    if (out.length % MIX_WINDOW === 0) counts = new Map();
-    let pick = rest.findIndex((it) => {
-      const k = mixKey(it);
-      return runOf(k) < MAX_RUN && (counts.get(k) ?? 0) < cap;
-    });
-    if (pick === -1) pick = 0;
-    const [it] = rest.splice(pick, 1) as [T];
-    out.push(it);
+  const rounds: T[][] = [];
+  const seen = new Map<string, number>();
+  for (const it of sorted) {
     const k = mixKey(it);
-    counts.set(k, (counts.get(k) ?? 0) + 1);
+    const n = seen.get(k) ?? 0;
+    seen.set(k, n + 1);
+    (rounds[n] ??= []).push(it);
   }
-  return out;
+  return rounds.flat();
 }
 
 export function rank(items: Prefiltered[], topN: number): ScoredItem[] {

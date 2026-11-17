@@ -93,48 +93,37 @@ describe('rank', () => {
     expect(out.map((x) => x.title)).toEqual([
       'hn top',
       'repo 5',
-      'repo 4',
       'rss post',
+      'repo 4',
+      'hn low',
       'repo 3',
       'repo 2',
-      'hn low',
       'repo 1',
       'repo 0',
     ]);
   });
 
-  it('mixSources caps runs at two and a source at 40% of the top 20', () => {
+  it('mixSources takes each source in turn, best first', () => {
     const list = [
       ...Array.from({ length: 30 }, (_, i) => ({ id: `g${i}`, sourceKind: 'github' })),
-      ...Array.from({ length: 30 }, (_, i) => ({ id: `h${i}`, sourceKind: 'hn' })),
-      ...Array.from({ length: 30 }, (_, i) => ({ id: `r${i}`, sourceKind: 'reddit' })),
+      ...Array.from({ length: 3 }, (_, i) => ({ id: `h${i}`, sourceKind: 'hn' })),
     ];
     const out = mixSources(list);
-    expect(out).toHaveLength(90);
-    const top = out.slice(0, 20);
-    expect(top.filter((x) => x.sourceKind === 'github')).toHaveLength(8);
-    expect(top.slice(0, 3).map((x) => x.id)).toEqual(['g0', 'g1', 'h0']);
-    for (let i = 2; i < 20; i++) {
-      expect(
-        new Set([top[i - 2], top[i - 1], top[i]].map((x) => x?.sourceKind)).size,
-      ).toBeGreaterThan(1);
-    }
+    expect(out).toHaveLength(33);
+    expect(out.slice(0, 7).map((x) => x.id)).toEqual(['g0', 'h0', 'g1', 'h1', 'g2', 'h2', 'g3']);
   });
 
-  it('mixSources treats each RSS feed as its own source, past the first 20 too', () => {
+  it('mixSources treats each RSS feed as its own source', () => {
     const list: { id: string; sourceKind: string; source?: string }[] = [
       ...Array.from({ length: 40 }, (_, i) => ({ id: `g${i}`, sourceKind: 'github' })),
-      ...Array.from({ length: 20 }, (_, i) => ({ id: `y${i}`, sourceKind: 'rss', source: 'YT' })),
-      ...Array.from({ length: 20 }, (_, i) => ({ id: `m${i}`, sourceKind: 'rss', source: 'Mine' })),
+      ...Array.from({ length: 5 }, (_, i) => ({ id: `y${i}`, sourceKind: 'rss', source: 'YT' })),
+      ...Array.from({ length: 5 }, (_, i) => ({ id: `m${i}`, sourceKind: 'rss', source: 'Mine' })),
     ];
-    const out = mixSources(list);
-    expect(out).toHaveLength(80);
-    expect(out.slice(0, 3).map((x) => x.id)).toEqual(['g0', 'g1', 'y0']);
-    for (const block of [out.slice(0, 20), out.slice(20, 40)]) {
-      expect(block.filter((x) => x.sourceKind === 'github')).toHaveLength(8);
-      expect(block.filter((x) => x.source === 'YT').length).toBeGreaterThan(0);
-      expect(block.filter((x) => x.source === 'Mine').length).toBeGreaterThan(0);
-    }
+    expect(
+      mixSources(list)
+        .slice(0, 6)
+        .map((x) => x.id),
+    ).toEqual(['g0', 'y0', 'm0', 'g1', 'y1', 'm1']);
   });
 
   it('computes perHour from points and age (floored at 1h)', () => {
