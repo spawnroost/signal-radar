@@ -84,7 +84,11 @@ export async function requestSummary(url: string): Promise<'done' | 'auth'> {
     }
     dispatchSummary(url, {
       type: 'fail',
-      message: e instanceof Error ? e.message : 'Could not summarize that page.',
+      message: !navigator.onLine
+        ? 'You are offline.'
+        : e instanceof Error
+          ? e.message
+          : 'Could not summarize that page.',
     });
     return 'done';
   }

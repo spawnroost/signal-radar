@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import type { ScoredItem } from '@radar/core/ranking';
+import { unreadableReason, type ScoredItem } from '@radar/core/ranking';
 import {
   requestSummary,
   dispatchSummary,
@@ -56,16 +56,19 @@ export function ItemActions({ url, title, save, extra }: Props) {
             <SaveToIdeas item={save.item} niche={save.niche} />
           </>
         )}
-        <button
-          type="button"
-          className="link-quiet"
-          aria-expanded={state.open}
-          aria-controls={panelId}
-          aria-label={`${label}. ${title}`}
-          onClick={toggle}
-        >
-          {label}
-        </button>
+        {/* Videos and Google News redirects have no text the server can read. */}
+        {!unreadableReason(url) && (
+          <button
+            type="button"
+            className="link-quiet"
+            aria-expanded={state.open}
+            aria-controls={panelId}
+            aria-label={`${label}. ${title}`}
+            onClick={toggle}
+          >
+            {label}
+          </button>
+        )}
         {extra && <>{extra}</>}
       </div>
       {state.open && (

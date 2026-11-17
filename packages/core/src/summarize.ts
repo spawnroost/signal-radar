@@ -3,6 +3,7 @@ import { parseHTML } from 'linkedom';
 import { z } from 'zod';
 import { HttpError, type FetchFn } from './http.js';
 import { fetchPublicText, type Resolver } from './netguard.js';
+import { unreadableReason } from './linkReadable.js';
 import type { Provider } from './score/types.js';
 
 /** Below this many characters of article text the page counts as unreadable. */
@@ -69,11 +70,6 @@ export function parsePageSummary(reply: string): PageSummary {
   };
 }
 
-const isYouTube = (url: string): boolean => {
-  const h = new URL(url).hostname.replace(/^www\./, '');
-  return h === 'youtu.be' || h === 'youtube.com' || h.endsWith('.youtube.com');
-};
-
 export interface SummarizeOptions {
   provider: Provider;
   fetch?: FetchFn;
@@ -87,7 +83,8 @@ export interface SummarizeOptions {
  * (network, model); those must not be cached.
  */
 export async function summarizePage(url: string, o: SummarizeOptions): Promise<SummarizeResult> {
-  if (isYouTube(url)) return { status: 'unreadable', reason: 'video' };
+  const blocked = unreadableReason(url);
+  if (blocked) return { status: 'unreadable', reason: blocked };
   let html: string;
   try {
     ({ text: html } = await fetchPublicText(url, {

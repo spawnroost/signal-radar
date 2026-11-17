@@ -38,6 +38,7 @@ describe('core/ranking entry', () => {
     }
     expect([...seen].map((f) => f.split('/').pop()).sort()).toEqual([
       'creatorProfile.ts',
+      'linkReadable.ts',
       'prefilter.ts',
       'rank.ts',
       'ranking.ts',

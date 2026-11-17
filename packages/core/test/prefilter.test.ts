@@ -122,7 +122,7 @@ describe('rank', () => {
   });
 
   it('mixSources treats each RSS feed as its own source, past the first 20 too', () => {
-    const list = [
+    const list: { id: string; sourceKind: string; source?: string }[] = [
       ...Array.from({ length: 40 }, (_, i) => ({ id: `g${i}`, sourceKind: 'github' })),
       ...Array.from({ length: 20 }, (_, i) => ({ id: `y${i}`, sourceKind: 'rss', source: 'YT' })),
       ...Array.from({ length: 20 }, (_, i) => ({ id: `m${i}`, sourceKind: 'rss', source: 'Mine' })),
