@@ -137,6 +137,18 @@ export default defineConfig({
     { type: 'rss', name: 'Medium: AI agents', url: 'https://medium.com/feed/tag/ai-agents' },
     { type: 'rss', name: 'Medium: Go', url: 'https://medium.com/feed/tag/golang' },
     { type: 'rss', name: 'Medium: Game dev', url: 'https://medium.com/feed/tag/game-development' },
+    // Newsletters: Substack, Beehiiv and Ghost all publish a feed (usually /feed).
+    { type: 'rss', name: 'Simon Willison', url: 'https://simonwillison.net/atom/everything/' },
+    { type: 'rss', name: 'Latent Space', url: 'https://www.latent.space/feed' },
+    {
+      type: 'rss',
+      name: 'The Pragmatic Engineer',
+      url: 'https://newsletter.pragmaticengineer.com/feed',
+    },
+    { type: 'rss', name: 'TLDR Tech', url: 'https://tldr.tech/api/rss/tech' },
+    { type: 'rss', name: 'TLDR AI', url: 'https://tldr.tech/api/rss/ai' },
+    { type: 'rss', name: 'Golang Weekly', url: 'https://golangweekly.com/rss/' },
+    { type: 'rss', name: 'Game Developer', url: 'https://www.gamedeveloper.com/rss.xml' },
     // YouTube channel feeds. alwaysInclude: video titles rarely carry niche keywords.
     {
       type: 'rss',
