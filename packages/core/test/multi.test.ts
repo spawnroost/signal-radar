@@ -304,7 +304,9 @@ describe('runForUsers', () => {
     const fetch = routedFetch({
       'gol.test': () => res(fixture('gol.xml')),
       'other.test': () => res('', 500),
-      'news.google.com': () => res(news),
+      // Only the Fashion search returns the item; bob's own topic search comes back empty.
+      'q=Fashion': () => res(news),
+      'news.google.com': () => res('<rss version="2.0"><channel></channel></rss>'),
     });
     const fashion: RadarUser['niches'] = [
       {

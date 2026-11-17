@@ -100,6 +100,18 @@ export interface ParseFeedOptions {
   tags?: string[] | undefined;
 }
 
+/** Drops Medium's per-feed `?source=rss…` tag so one post found under two tags is one item. */
+function cleanUrl(url: string): string {
+  if (!/^https?:\/\/([a-z0-9-]+\.)*medium\.com\//i.test(url)) return url;
+  try {
+    const u = new URL(url);
+    u.searchParams.delete('source');
+    return u.toString();
+  } catch {
+    return url;
+  }
+}
+
 export function parseFeed(xml: string, opts: ParseFeedOptions = {}): RawItem[] {
   const doc = parser.parse(xml) as Node;
   const channel = (doc['rss'] as Node | undefined)?.['channel'] as Node | undefined;
@@ -109,7 +121,7 @@ export function parseFeed(xml: string, opts: ParseFeedOptions = {}): RawItem[] {
 
   const out: RawItem[] = [];
   for (const e of entries) {
-    const url = linkOf(e).trim();
+    const url = cleanUrl(linkOf(e).trim());
     const title = stripHtml(text(e['title']));
     if (!url || !title || !/^https?:\/\//i.test(url)) continue;
     const group = e['media:group'] as Node | undefined;

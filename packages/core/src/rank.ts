@@ -47,30 +47,43 @@ export function momentumRanks(items: readonly Item[]): Map<Item, number> {
 }
 
 /**
- * Reorders a score-sorted list so the top `MIX_WINDOW` mixes sources: each slot takes the best
- * remaining item that would not make a run longer than `MAX_RUN` or push its source past
- * `MIX_SHARE` of the window. If nothing qualifies, the best remaining item goes in anyway.
+ * Mix key: each RSS feed (YouTube channel, Medium tag, a user's own feed) counts as its own source,
+ * so feeds do not share one "rss" slot; hn/reddit/github and the rest count once each.
  */
-export function mixSources<T extends { sourceKind: string }>(sorted: readonly T[]): T[] {
+export function mixKey(it: { sourceKind: string; source?: string }): string {
+  return it.sourceKind === 'rss' && it.source ? `rss:${it.source}` : it.sourceKind;
+}
+
+/**
+ * Reorders a score-sorted list so every block of `MIX_WINDOW` mixes sources: each slot takes the
+ * best remaining item that would not make a run longer than `MAX_RUN` or push its source past
+ * `MIX_SHARE` of the current block. If nothing qualifies, the best remaining item goes in anyway.
+ */
+export function mixSources<T extends { sourceKind: string; source?: string }>(
+  sorted: readonly T[],
+): T[] {
   const cap = Math.max(1, Math.floor(MIX_WINDOW * MIX_SHARE));
   const rest = [...sorted];
   const out: T[] = [];
-  const counts = new Map<string, number>();
-  while (rest.length > 0 && out.length < MIX_WINDOW) {
-    const runOf = (kind: string) => {
-      let n = 0;
-      for (let i = out.length - 1; i >= 0 && out[i]?.sourceKind === kind; i--) n++;
-      return n;
-    };
-    let pick = rest.findIndex(
-      (it) => runOf(it.sourceKind) < MAX_RUN && (counts.get(it.sourceKind) ?? 0) < cap,
-    );
+  let counts = new Map<string, number>();
+  const runOf = (key: string) => {
+    let n = 0;
+    for (let i = out.length - 1; i >= 0 && mixKey(out[i] as T) === key; i--) n++;
+    return n;
+  };
+  while (rest.length > 0) {
+    if (out.length % MIX_WINDOW === 0) counts = new Map();
+    let pick = rest.findIndex((it) => {
+      const k = mixKey(it);
+      return runOf(k) < MAX_RUN && (counts.get(k) ?? 0) < cap;
+    });
     if (pick === -1) pick = 0;
     const [it] = rest.splice(pick, 1) as [T];
     out.push(it);
-    counts.set(it.sourceKind, (counts.get(it.sourceKind) ?? 0) + 1);
+    const k = mixKey(it);
+    counts.set(k, (counts.get(k) ?? 0) + 1);
   }
-  return [...out, ...rest];
+  return out;
 }
 
 export function rank(items: Prefiltered[], topN: number): ScoredItem[] {

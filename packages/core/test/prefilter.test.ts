@@ -121,6 +121,22 @@ describe('rank', () => {
     }
   });
 
+  it('mixSources treats each RSS feed as its own source, past the first 20 too', () => {
+    const list = [
+      ...Array.from({ length: 40 }, (_, i) => ({ id: `g${i}`, sourceKind: 'github' })),
+      ...Array.from({ length: 20 }, (_, i) => ({ id: `y${i}`, sourceKind: 'rss', source: 'YT' })),
+      ...Array.from({ length: 20 }, (_, i) => ({ id: `m${i}`, sourceKind: 'rss', source: 'Mine' })),
+    ];
+    const out = mixSources(list);
+    expect(out).toHaveLength(80);
+    expect(out.slice(0, 3).map((x) => x.id)).toEqual(['g0', 'g1', 'y0']);
+    for (const block of [out.slice(0, 20), out.slice(20, 40)]) {
+      expect(block.filter((x) => x.sourceKind === 'github')).toHaveLength(8);
+      expect(block.filter((x) => x.source === 'YT').length).toBeGreaterThan(0);
+      expect(block.filter((x) => x.source === 'Mine').length).toBeGreaterThan(0);
+    }
+  });
+
   it('computes perHour from points and age (floored at 1h)', () => {
     expect(mk('a b c', '', { points: 100, ageH: 10 }).momentum.perHour).toBe(10);
     expect(mk('a b d', '', { points: 100, ageH: 0.1 }).momentum.perHour).toBe(100);

@@ -137,10 +137,36 @@ export default defineConfig({
     { type: 'rss', name: 'Medium: AI agents', url: 'https://medium.com/feed/tag/ai-agents' },
     { type: 'rss', name: 'Medium: Go', url: 'https://medium.com/feed/tag/golang' },
     { type: 'rss', name: 'Medium: Game dev', url: 'https://medium.com/feed/tag/game-development' },
+    // YouTube channel feeds. alwaysInclude: video titles rarely carry niche keywords.
     {
       type: 'rss',
       name: 'Fireship (YouTube)',
       url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCsBjURrPoezykLs9EqgamOA',
+      alwaysInclude: true,
+    },
+    {
+      type: 'rss',
+      name: 'ThePrimeTime (YouTube)',
+      url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCUyeluBRhGPCW4rPe_UvBZQ',
+      alwaysInclude: true,
+    },
+    {
+      type: 'rss',
+      name: 'Two Minute Papers (YouTube)',
+      url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCbfYPyITQ-7l4upoX8nvctg',
+      alwaysInclude: true,
+    },
+    {
+      type: 'rss',
+      name: 'Linus Tech Tips (YouTube)',
+      url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCXuqSBlHAE6Xw-yeJA0Tunw',
+      alwaysInclude: true,
+    },
+    {
+      type: 'rss',
+      name: 'Marques Brownlee (YouTube)',
+      url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCBJycsmduvYEL83R_U4JriQ',
+      alwaysInclude: true,
     },
     {
       type: 'rss',
