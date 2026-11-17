@@ -132,6 +132,11 @@ export default defineConfig({
     { type: 'rss', name: 'GamingOnLinux', url: 'https://www.gamingonlinux.com/article_rss.php' },
     { type: 'rss', name: 'The Verge', url: 'https://www.theverge.com/rss/index.xml' },
     { type: 'rss', name: 'Product Hunt', url: 'https://www.producthunt.com/feed' },
+    // Medium: any tag, user or publication has a feed (/feed/tag/x, /feed/@user, /feed/pub).
+    { type: 'rss', name: 'Medium: LLM', url: 'https://medium.com/feed/tag/llm' },
+    { type: 'rss', name: 'Medium: AI agents', url: 'https://medium.com/feed/tag/ai-agents' },
+    { type: 'rss', name: 'Medium: Go', url: 'https://medium.com/feed/tag/golang' },
+    { type: 'rss', name: 'Medium: Game dev', url: 'https://medium.com/feed/tag/game-development' },
     {
       type: 'rss',
       name: 'Fireship (YouTube)',
