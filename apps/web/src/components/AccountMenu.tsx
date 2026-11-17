@@ -13,6 +13,7 @@ interface Props {
 
 export function AccountMenu({ me, onSignOut }: Props) {
   const [open, setOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
   const { install } = useInstall();
   const paymentsOpen = usePaymentsOpen();
   const root = useRef<HTMLDivElement>(null);
@@ -46,6 +47,34 @@ export function AccountMenu({ me, onSignOut }: Props) {
       </Link>
     );
   }
+
+  const share = async () => {
+    const url = location.origin + '/';
+    const data = {
+      title: 'Signal Radar',
+      text: 'A ranked radar of what is moving in the niches you follow.',
+      url,
+    };
+    if (navigator.share) {
+      setOpen(false);
+      try {
+        await navigator.share(data);
+      } catch {
+        // User closed the share sheet.
+      }
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => {
+        setCopied(false);
+        setOpen(false);
+      }, 1200);
+    } catch {
+      window.prompt('Copy this link', url);
+    }
+  };
 
   const { user } = me.me;
   const initial = (user.name || user.email).trim().charAt(0).toUpperCase() || '?';
@@ -92,6 +121,9 @@ export function AccountMenu({ me, onSignOut }: Props) {
               Payments
             </Link>
           )}
+          <button type="button" role="menuitem" className="menu-item" onClick={share}>
+            {copied ? 'Link copied' : 'Invite a friend'}
+          </button>
           {install && (
             <button
               type="button"
