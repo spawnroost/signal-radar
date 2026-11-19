@@ -14,6 +14,7 @@ export type RouteName =
   | 'privacy'
   | 'refunds'
   | 'contact'
+  | 'billing'
   | 'admin';
 
 export interface Route {
@@ -40,6 +41,7 @@ const PATHS: Record<RouteName, string> = {
   privacy: '/privacy',
   refunds: '/refunds',
   contact: '/contact',
+  billing: '/billing/return',
   admin: '/admin',
 };
 

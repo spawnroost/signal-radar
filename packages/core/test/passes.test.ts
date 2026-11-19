@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PASSES, extendUntil, formatPrice } from '../src/passes.js';
+import { PASSES, extendUntil, formatPrice, shortUserId } from '../src/passes.js';
 
 const NOW = new Date('2026-11-09T06:00:00Z');
 const pass = (id: string) => PASSES.find((p) => p.id === id)!;
@@ -7,21 +7,21 @@ const pass = (id: string) => PASSES.find((p) => p.id === id)!;
 describe('PASSES', () => {
   it('has the three passes with days and prices in minor units', () => {
     expect(PASSES.map((p) => ({ id: p.id, days: p.days, inr: p.inr, usd: p.usd }))).toEqual([
-      { id: 'p30', days: 30, inr: 9900, usd: 200 },
-      { id: 'p90', days: 90, inr: 24900, usd: 500 },
-      { id: 'p365', days: 365, inr: 79900, usd: 1500 },
+      { id: 'p30', days: 30, inr: 14900, usd: 300 },
+      { id: 'p90', days: 90, inr: 34900, usd: 700 },
+      { id: 'p365', days: 365, inr: 99900, usd: 1900 },
     ]);
   });
 });
 
 describe('formatPrice', () => {
   it('prints rupees and dollars without decimals', () => {
-    expect(formatPrice(pass('p30'), 'INR')).toBe('₹99');
-    expect(formatPrice(pass('p90'), 'INR')).toBe('₹249');
-    expect(formatPrice(pass('p365'), 'INR')).toBe('₹799');
-    expect(formatPrice(pass('p30'), 'USD')).toBe('$2');
-    expect(formatPrice(pass('p90'), 'USD')).toBe('$5');
-    expect(formatPrice(pass('p365'), 'USD')).toBe('$15');
+    expect(formatPrice(pass('p30'), 'INR')).toBe('₹149');
+    expect(formatPrice(pass('p90'), 'INR')).toBe('₹349');
+    expect(formatPrice(pass('p365'), 'INR')).toBe('₹999');
+    expect(formatPrice(pass('p30'), 'USD')).toBe('$3');
+    expect(formatPrice(pass('p90'), 'USD')).toBe('$7');
+    expect(formatPrice(pass('p365'), 'USD')).toBe('$19');
   });
 });
 
@@ -45,5 +45,12 @@ describe('extendUntil', () => {
     const copy = new Date(end);
     extendUntil(end, NOW, 30);
     expect(end).toEqual(copy);
+  });
+});
+
+describe('shortUserId', () => {
+  it('uses the first 6 alphanumerics uppercased', () => {
+    expect(shortUserId('a1b2-c3d4e5')).toBe('A1B2C3');
+    expect(shortUserId('--ab')).toBe('AB');
   });
 });

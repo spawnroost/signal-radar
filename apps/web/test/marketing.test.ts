@@ -25,8 +25,8 @@ describe('tier data', () => {
     for (const row of COMPARE) expect(pricing).toContain(row.label);
     expect(landing).toContain(PRICE.pro);
     // Rupees by default for everyone; dollars only when the visitor picks them.
-    expect(pricing).toContain('₹99');
-    expect(pricing).toContain('₹799');
+    expect(pricing).toContain('₹149');
+    expect(pricing).toContain('₹999');
     expect(pricing).not.toContain('$');
   });
 
@@ -51,7 +51,7 @@ describe('page head helpers', () => {
     expect(out).toContain('<title>Pricing · Signal Radar</title>');
     expect(out).toContain('rel="canonical" href="https://a.test/pricing"');
     expect(out).toContain('property="og:url" content="https://a.test/pricing"');
-    expect(out).toMatch(/property="og:description" content="Free keeps[^"]*₹99 for 30 days/);
+    expect(out).toMatch(/property="og:description" content="Free keeps[^"]*₹149 for 30 days/);
   });
 
   it('fills #root and tags it with the route', () => {

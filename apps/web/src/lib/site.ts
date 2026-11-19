@@ -26,12 +26,12 @@ export const PAGE_META = {
   '/privacy': {
     title: 'Privacy · Signal Radar',
     description:
-      'What Signal Radar stores, how UPI payments are handled, and how summaries use an AI model.',
+      'What Signal Radar stores, how payments are handled, and how summaries use an AI model.',
   },
   '/refunds': {
     title: 'Refunds · Signal Radar',
     description:
-      'Full refund within 7 days of a Pro pass purchase, on request by email, sent to your UPI ID.',
+      'Full refund within 7 days of a Pro pass purchase, on request by email, sent back the way you paid.',
   },
   '/contact': {
     title: 'Contact · Signal Radar',

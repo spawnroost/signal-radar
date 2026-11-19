@@ -91,11 +91,11 @@ describe.skipIf(!dbAvailable)('billing (Razorpay passes)', () => {
         currency: 'INR',
         international: false,
         enabled: true,
-        upi: false,
+        dodo: false,
         passes: [
-          { id: 'p30', days: 30, amount: 9900, label: '₹99' },
-          { id: 'p90', days: 90, amount: 24900, label: '₹249' },
-          { id: 'p365', days: 365, amount: 79900, label: '₹799' },
+          { id: 'p30', days: 30, amount: 14900, label: '₹149' },
+          { id: 'p90', days: 90, amount: 34900, label: '₹349' },
+          { id: 'p365', days: 365, amount: 99900, label: '₹999' },
         ],
       });
     }
@@ -127,7 +127,7 @@ describe.skipIf(!dbAvailable)('billing (Razorpay passes)', () => {
         })
       ).json()) as Json;
       expect(listed).toMatchObject({ currency: 'USD', international: true });
-      expect(listed.passes[0]).toEqual({ id: 'p30', days: 30, amount: 200, label: '$2' });
+      expect(listed.passes[0]).toEqual({ id: 'p30', days: 30, amount: 300, label: '$3' });
       const def = (await (await intl.app.request('/api/billing/passes')).json()) as Json;
       expect(def.currency).toBe('INR');
 
@@ -138,7 +138,7 @@ describe.skipIf(!dbAvailable)('billing (Razorpay passes)', () => {
         json: { passId: 'p30', currency: 'USD' },
       });
       expect(res.status).toBe(200);
-      expect(await res.json()).toMatchObject({ amount: 200, currency: 'USD' });
+      expect(await res.json()).toMatchObject({ amount: 300, currency: 'USD' });
     } finally {
       await intl.close();
     }
@@ -151,7 +151,7 @@ describe.skipIf(!dbAvailable)('billing (Razorpay passes)', () => {
     const body = (await res.json()) as Json;
     expect(body).toMatchObject({
       orderId: 'order_test_1',
-      amount: 24900,
+      amount: 34900,
       currency: 'INR',
       keyId: KEY_ID,
       name: 'Signal Radar',
@@ -164,7 +164,7 @@ describe.skipIf(!dbAvailable)('billing (Razorpay passes)', () => {
     );
     const payload = JSON.parse(String(sent.init?.body)) as Json;
     expect(payload).toMatchObject({
-      amount: 24900,
+      amount: 34900,
       currency: 'INR',
       notes: { userId: u.id, passId: 'p90' },
     });
@@ -177,7 +177,7 @@ describe.skipIf(!dbAvailable)('billing (Razorpay passes)', () => {
       id: payload.receipt,
       passId: 'p90',
       currency: 'INR',
-      amount: 24900,
+      amount: 34900,
       days: 90,
       status: 'created',
       razorpayOrderId: 'order_test_1',

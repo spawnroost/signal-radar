@@ -1,22 +1,26 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ApiError } from '../lib/api';
 import type { MeState } from '../lib/me';
 import { formatAge } from '../lib/format';
 import { durationLabel, formatMoney } from '../lib/passes';
 import {
-  decideError,
-  decidePayment,
   fetchAdminPayments,
+  paymentCurrency,
+  providerLabel,
+  statusLabel,
   type AdminPayment,
   type PaymentStatus,
-} from '../lib/upi';
+} from '../lib/adminPayments';
 import { Link } from './Link';
 import { Tabs } from './Tabs';
 
-const STATUSES: { id: PaymentStatus; label: string }[] = [
+type Filter = PaymentStatus | 'all';
+
+const STATUSES: { id: Filter; label: string }[] = [
+  { id: 'all', label: 'All' },
   { id: 'pending', label: 'Pending' },
-  { id: 'approved', label: 'Approved' },
-  { id: 'rejected', label: 'Rejected' },
+  { id: 'approved', label: 'Paid' },
+  { id: 'failed', label: 'Failed' },
+  { id: 'refunded', label: 'Refunded' },
 ];
 
 type Load =
@@ -47,7 +51,7 @@ function NotFound() {
 }
 
 function Payments() {
-  const [status, setStatus] = useState<PaymentStatus>('pending');
+  const [status, setStatus] = useState<Filter>('all');
   const [load, setLoad] = useState<Load>({ status: 'loading' });
   const [attempt, setAttempt] = useState(0);
 
@@ -81,7 +85,7 @@ function Payments() {
       <Tabs
         tabs={STATUSES}
         active={status}
-        onChange={(id) => setStatus(id as PaymentStatus)}
+        onChange={(id) => setStatus(id as Filter)}
         label="Payment status"
         panelId="admin-panel"
         idPrefix="admin-status"
@@ -111,12 +115,14 @@ function Payments() {
         {load.status === 'ready' &&
           (load.payments.length === 0 ? (
             <p className="meta admin-empty">
-              {status === 'pending' ? 'Nothing waiting for approval.' : `No ${status} payments.`}
+              {status === 'all'
+                ? 'No payments yet.'
+                : `No ${statusLabel(status).toLowerCase()} payments.`}
             </p>
           ) : (
             <ul className="admin-list">
               {load.payments.map((p) => (
-                <Row key={p.id} p={p} onDecided={refresh} />
+                <Row key={p.id} p={p} />
               ))}
             </ul>
           ))}
@@ -125,42 +131,8 @@ function Payments() {
   );
 }
 
-function Row({ p, onDecided }: { p: AdminPayment; onDecided: () => void }) {
-  const [confirm, setConfirm] = useState<'approve' | 'reject' | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
-  const [copied, setCopied] = useState(false);
-  const price = formatMoney(p.amount, 'INR');
-
-  const copy = () => {
-    if (!p.utr) return;
-    navigator.clipboard
-      .writeText(p.utr)
-      .then(() => {
-        setCopied(true);
-        window.setTimeout(() => setCopied(false), 2000);
-      })
-      .catch(() => {
-        /* no clipboard: the UTR is selectable */
-      });
-  };
-
-  const decide = async (decision: 'approve' | 'reject') => {
-    if (busy) return;
-    setBusy(true);
-    setError('');
-    try {
-      await decidePayment(p.id, decision);
-      onDecided();
-    } catch (e) {
-      setError(decideError(e));
-      // a 409 means someone else decided it first: the list is stale
-      if (e instanceof ApiError && e.status === 409) onDecided();
-      setBusy(false);
-      setConfirm(null);
-    }
-  };
-
+function Row({ p }: { p: AdminPayment }) {
+  const price = formatMoney(p.amount, paymentCurrency(p));
   return (
     <li className="admin-row">
       <div className="admin-top">
@@ -174,62 +146,13 @@ function Row({ p, onDecided }: { p: AdminPayment; onDecided: () => void }) {
       {p.utr && (
         <div className="admin-utr">
           <span className="admin-utr-id">{p.utr}</span>
-          <button type="button" className="btn" onClick={copy}>
-            {copied ? 'Copied' : 'Copy'}
-          </button>
         </div>
       )}
       <p className="meta admin-note">{p.note}</p>
-
-      {p.status === 'pending' ? (
-        confirm ? (
-          <div className="admin-confirm">
-            <p className="admin-confirm-text" role="status">
-              {confirm === 'approve'
-                ? `Check that ${price} has reached your UPI app, with this UTR, before approving.`
-                : 'Reject this payment? The user is told it could not be verified.'}
-            </p>
-            <div className="admin-actions">
-              <button
-                type="button"
-                className="btn btn-solid"
-                disabled={busy}
-                onClick={() => void decide(confirm)}
-              >
-                {confirm === 'approve' ? 'Yes, approve' : 'Yes, reject'}
-              </button>
-              <button
-                type="button"
-                className="btn"
-                disabled={busy}
-                onClick={() => setConfirm(null)}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="admin-actions">
-            <button type="button" className="btn btn-solid" onClick={() => setConfirm('approve')}>
-              Approve
-            </button>
-            <button type="button" className="btn" onClick={() => setConfirm('reject')}>
-              Reject
-            </button>
-          </div>
-        )
-      ) : (
-        <p className="meta">
-          {p.status === 'approved' ? 'Approved' : 'Rejected'}
-          {p.decidedAt && ` ${formatAge(p.decidedAt)} ago`}
-          {p.decidedBy && ` by ${p.decidedBy.startsWith('telegram:') ? 'Telegram' : 'admin'}`}
-        </p>
-      )}
-      {error && (
-        <p className="warn" role="alert">
-          {error}
-        </p>
-      )}
+      <p className="meta">
+        {statusLabel(p.status)} via {providerLabel(p.provider)}
+        {p.decidedAt && `, ${formatAge(p.decidedAt)} ago`}
+      </p>
     </li>
   );
 }

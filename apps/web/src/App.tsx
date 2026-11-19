@@ -9,6 +9,7 @@ import { Landing } from './components/Landing';
 import { Contact, Privacy, Refunds, Terms } from './components/Legal';
 import { Link } from './components/Link';
 import { AdminPayments } from './components/AdminPayments';
+import { BillingReturn } from './components/BillingReturn';
 import { Pricing } from './components/Pricing';
 import { Queue } from './components/Queue';
 import { SaveTarget } from './components/SaveTarget';
@@ -68,6 +69,7 @@ const TITLES: Record<RouteName, string> = {
   privacy: PAGE_META['/privacy'].title,
   refunds: PAGE_META['/refunds'].title,
   contact: PAGE_META['/contact'].title,
+  billing: 'Payment · Signal Radar',
   admin: 'Payments · Signal Radar',
 };
 
@@ -355,6 +357,7 @@ export function App() {
           <Gate me={me} feature="settings" />
         ))}
       {route.name === 'pricing' && <Pricing me={me} />}
+      {route.name === 'billing' && <BillingReturn me={me} />}
       {route.name === 'terms' && <Terms />}
       {route.name === 'privacy' && <Privacy />}
       {route.name === 'refunds' && <Refunds />}

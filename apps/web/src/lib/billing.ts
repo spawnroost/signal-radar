@@ -1,5 +1,5 @@
 /*
- * SHELVED: the Razorpay checkout below is not used while payments are direct UPI (see UpiPay.tsx).
+ * SHELVED: the Razorpay checkout below is not used (payments go through Dodo, see checkout.ts).
  * Kept so it can be revived; nothing in the app imports it except `fetchPasses`.
  */
 import type { Currency, Pass } from './passes';
@@ -10,8 +10,8 @@ export interface PassesInfo {
   passes: { id: Pass['id']; days: number; amount: number; label: string }[];
   /** Razorpay keys are set (shelved). */
   enabled: boolean;
-  /** A receiving UPI ID is set: direct UPI payments are open. */
-  upi: boolean;
+  /** Dodo Payments is set up: hosted checkout is open. */
+  dodo: boolean;
 }
 
 /** The public price list; INR unless USD is asked for (and international payments are on). */

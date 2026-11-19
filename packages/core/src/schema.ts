@@ -170,7 +170,7 @@ export const RadarConfigSchema = z.object({
   legalName: z.string().default('TODO'),
   /** Contact email shown on the policy pages. */
   contactEmail: z.string().default('TODO'),
-  /** Accept USD (and show the currency toggle). Keep false: UPI is INR only; USD belongs to the shelved Razorpay flow. */
+  /** Accept USD (and show the currency toggle). */
   internationalPayments: z.boolean().default(false),
   niches: z.array(NicheSchema).min(1),
   sources: z.array(SourceConfigSchema),

@@ -1,23 +1,34 @@
 /** What Free and Pro include. The Pricing page and the landing page both render these. */
 import { INTERNATIONAL_PAYMENTS } from './passes';
+import { formatPrice, PASSES } from '@radar/core/passes';
 
 const INTL = INTERNATIONAL_PAYMENTS;
+
+const [first, second, third] = PASSES;
+if (!first || !second || !third) throw new Error('PASSES needs three passes');
+
+const inr = (pass: typeof first) => formatPrice(pass, 'INR');
+const usd = (pass: typeof first) => formatPrice(pass, 'USD');
+const length = (pass: typeof first) => (pass.days >= 365 ? 'a year' : `${pass.days} days`);
+/** "₹149 for 30 days", or "₹149 or $3 for 30 days" when dollars are on. */
+const priced = (pass: typeof first) =>
+  `${INTL ? `${inr(pass)} or ${usd(pass)}` : inr(pass)} for ${length(pass)}`;
 
 /** Prices in marketing copy: rupees only until `internationalPayments` is on in radar.config.ts. */
 export const PRICE = {
   free: INTL ? '$0' : '₹0',
-  pro: INTL ? '$2' : '₹99',
-  proPeriod: ' for 30 days',
-  passLine: INTL ? '$2 for 30 days, or ₹99 in India' : '₹99 for 30 days',
+  pro: INTL ? usd(first) : inr(first),
+  proPeriod: ` for ${first.days} days`,
+  passLine: INTL
+    ? `${usd(first)} for ${first.days} days, or ${inr(first)} in India`
+    : `${inr(first)} for ${first.days} days`,
   passNote: 'Pay once. Time adds up: buying again adds days to the end.',
   /** The three passes in one sentence fragment, for the FAQ and the terms. */
-  allPasses: INTL
-    ? '₹99 or $2 for 30 days, ₹249 or $5 for 90 days, ₹799 or $15 for a year'
-    : '₹99 for 30 days, ₹249 for 90 days, ₹799 for a year',
+  allPasses: `${priced(first)}, ${priced(second)}, ${priced(third)}`,
   /** The line under the Pro price on the landing page. */
   proMore: INTL
-    ? '₹99 in India. Also $5 for 90 days, $15 for a year.'
-    : 'Also ₹249 for 90 days, ₹799 for a year.',
+    ? `${inr(first)} in India. Also ${usd(second)} for ${second.days} days, ${usd(third)} for a year.`
+    : `Also ${inr(second)} for ${second.days} days, ${inr(third)} for a year.`,
 } as const;
 
 export const FREE_FEATURES: readonly string[] = [

@@ -94,7 +94,8 @@ export const verification = pgTable(
 
 export type Plan = 'free' | 'pro';
 export type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'canceled' | 'none';
-export type SubscriptionProvider = 'lemonsqueezy' | 'stub' | 'razorpay' | 'upi' | 'instamojo';
+export type SubscriptionProvider =
+  'lemonsqueezy' | 'stub' | 'razorpay' | 'upi' | 'instamojo' | 'dodo';
 
 export type PassPurchaseStatus = 'created' | 'paid' | 'failed';
 
@@ -119,12 +120,12 @@ export const passPurchase = pgTable(
   (t) => [index('pass_purchase_user_idx').on(t.userId)],
 );
 
-export type PaymentProvider = 'upi' | 'instamojo';
-export type PaymentStatus = 'pending' | 'approved' | 'rejected';
+export type PaymentProvider = 'upi' | 'instamojo' | 'dodo';
+export type PaymentStatus = 'pending' | 'approved' | 'rejected' | 'failed' | 'refunded';
 
 /**
  * One payment for a Pro pass. Generic (not UPI-only) so a second provider needs no table change.
- * Amount is in paise and always comes from PASSES server-side. Grants go through one function.
+ * Amount is in minor units (paise for INR, cents for USD; dodo rows note the currency) and always comes from PASSES server-side. Grants go through one function.
  */
 export const payment = pgTable(
   'payment',
@@ -156,8 +157,11 @@ export const payment = pgTable(
     unique('payment_provider_ref_unique').on(t.provider, t.providerRef),
     check('payment_utr_format', sql`${t.utr} IS NULL OR ${t.utr} ~ '^[0-9]{12}$'`),
     check('payment_upi_needs_utr', sql`${t.provider} <> 'upi' OR ${t.utr} IS NOT NULL`),
-    check('payment_provider_check', sql`${t.provider} IN ('upi','instamojo')`),
-    check('payment_status_check', sql`${t.status} IN ('pending','approved','rejected')`),
+    check('payment_provider_check', sql`${t.provider} IN ('upi','instamojo','dodo')`),
+    check(
+      'payment_status_check',
+      sql`${t.status} IN ('pending','approved','rejected','failed','refunded')`,
+    ),
     index('payment_user_idx').on(t.userId),
     index('payment_status_idx').on(t.status, t.createdAt),
   ],

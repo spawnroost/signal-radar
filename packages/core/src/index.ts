@@ -19,7 +19,6 @@ export * from './score/index.js';
 export * from './summarize.js';
 export * from './search.js';
 export * from './passes.js';
-export * from './upi.js';
 export * from './youtube.js';
 export * from './notion/index.js';
 export * from './digest/telegram.js';

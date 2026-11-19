@@ -27,14 +27,6 @@ describe('ADMIN_EMAILS matching', () => {
   });
 });
 
-describe('UPI env', () => {
-  it('defaults the payee name and rejects a malformed VPA', () => {
-    expect(parseEnv({ ...BASE }).UPI_PAYEE_NAME).toBe('Signal Radar');
-    expect(parseEnv({ ...BASE, UPI_VPA: 'name@bank' }).UPI_VPA).toBe('name@bank');
-    expect(() => parseEnv({ ...BASE, UPI_VPA: 'not a vpa' })).toThrow();
-  });
-});
-
 describe.skipIf(!dbAvailable)('requireAdmin', () => {
   let ctx: Awaited<ReturnType<typeof setup>>;
   let probe: Hono<AppVars>;

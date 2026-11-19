@@ -79,4 +79,4 @@ docker compose --env-file .env up -d --no-build --remove-orphans
 docker compose --env-file .env ps
 echo "deployed ${tag}; previous: $(cat .previous-tag 2>/dev/null || echo none)"
 REMOTE
-log "done. Check: curl -fsS https://signalradar.spawnroost.com/api/health"
+log "done. Check: curl -fsS ${SITE}/api/health"

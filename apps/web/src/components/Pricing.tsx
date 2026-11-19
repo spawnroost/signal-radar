@@ -5,12 +5,11 @@ import type { MeState } from '../lib/me';
 import { usePaymentsOpen } from '../lib/payments';
 import { CheckIcon, RadarArcs } from '../icons';
 import { formatDate, planBadge } from '../lib/plan';
-import { durationLabel, perMonth, savingsPercent } from '../lib/passes';
-import { usePendingPayment } from '../lib/upi';
+import { startCheckout } from '../lib/checkout';
+import { durationLabel, perMonth, savingsPercent, storedCurrency } from '../lib/passes';
 import { COMPARE, PRICE } from '../lib/tiers';
 import { Link } from './Link';
 import { PlanLine } from './PlanLine';
-import { UpiPay } from './UpiPay';
 
 const HERO = {
   free: {
@@ -39,19 +38,29 @@ function daysLeftText(days: number): string {
 }
 
 export function Pricing({ me }: { me: MeState }) {
-  /** Null until the server has said whether a UPI ID is set (or when it could not). */
+  /** Null until the server has said whether checkout is set up (or when it could not). */
   const enabled = usePaymentsOpen();
-  const [paying, setPaying] = useState<Pass | null>(null);
-  const waiting = usePendingPayment(me.status === 'ready');
+  const currency = storedCurrency();
+  /** The pass whose checkout is being opened; every Buy button waits while one is. */
+  const [paying, setPaying] = useState<Pass['id'] | null>(null);
+  const [error, setError] = useState('');
 
-  const buy = (pass: Pass) => {
+  const buy = async (pass: Pass) => {
     if (me.status !== 'ready') {
       setGateNext('/pricing');
       showGate('pro');
       return;
     }
-    if (enabled !== true) return;
-    setPaying(pass);
+    if (enabled !== true || paying) return;
+    setError('');
+    setPaying(pass.id);
+    try {
+      await startCheckout(pass.id, currency);
+      // The browser is on its way to the checkout page; the button stays busy until it leaves.
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not start the payment. Try again.');
+      setPaying(null);
+    }
   };
 
   const badge = me.status === 'ready' ? planBadge(me.me) : null;
@@ -118,11 +127,6 @@ export function Pricing({ me }: { me: MeState }) {
           {copy.title}
         </h2>
         <p className="pricing-pitch">{copy.pitch}</p>
-        {waiting && !noEnd && (
-          <PlanLine name={isPro ? 'Pro' : 'Free'} role="status">
-            Payment waiting for approval
-          </PlanLine>
-        )}
         {noEnd && (
           <Link to="read" className="btn pricing-back">
             Open the radar
@@ -155,7 +159,7 @@ export function Pricing({ me }: { me: MeState }) {
         <ul className="passes">
           {PASSES.map((pass) => {
             const best = pass.id === 'p365';
-            const saves = savingsPercent(pass, 'INR');
+            const saves = savingsPercent(pass, currency);
             const length = durationLabel(pass.days);
             return (
               <li key={pass.id} className="pass" data-best={best || undefined}>
@@ -165,9 +169,11 @@ export function Pricing({ me }: { me: MeState }) {
                   {best && <span className="pass-flag">Best value</span>}
                 </div>
                 <p className="pass-price">
-                  <span className="price">{formatPrice(pass, 'INR')}</span>
+                  <span className="price">{formatPrice(pass, currency)}</span>
                 </p>
-                <p className="pass-month">{perMonth(pass.inr, pass.days, 'INR')}</p>
+                <p className="pass-month">
+                  {perMonth(currency === 'INR' ? pass.inr : pass.usd, pass.days, currency)}
+                </p>
                 <p className="pass-save">
                   {saves > 0
                     ? `Saves ${saves}% against 30-day passes`
@@ -181,15 +187,28 @@ export function Pricing({ me }: { me: MeState }) {
                       ? `${length} of Pro, coming soon`
                       : `${isPro ? 'Add' : 'Buy'} ${length} of Pro`
                   }
-                  disabled={enabled !== true}
-                  onClick={() => buy(pass)}
+                  disabled={enabled !== true || paying !== null}
+                  aria-busy={paying === pass.id || undefined}
+                  onClick={() => void buy(pass)}
                 >
-                  {enabled === false ? 'Coming soon' : isPro && !trial ? 'Add' : 'Buy'}
+                  {enabled === false
+                    ? 'Coming soon'
+                    : paying === pass.id
+                      ? 'Opening'
+                      : isPro && !trial
+                        ? 'Add'
+                        : 'Buy'}
                 </button>
               </li>
             );
           })}
         </ul>
+      )}
+
+      {error && !noEnd && (
+        <p className="warn" role="alert">
+          {error}
+        </p>
       )}
 
       {!isPro && compare}
@@ -232,8 +251,9 @@ export function Pricing({ me }: { me: MeState }) {
             <div>
               <dt>How do I pay?</dt>
               <dd>
-                With UPI. Open your UPI app from the Buy button, pay, then enter the 12-digit
-                reference. We approve it by hand, usually within a few hours.
+                Press Buy and you go to a secure checkout run by Dodo Payments, which shows the
+                payment methods you can use. You come back here, and Pro turns on as soon as the
+                payment is confirmed.
               </dd>
             </div>
           </dl>
@@ -241,8 +261,6 @@ export function Pricing({ me }: { me: MeState }) {
       )}
 
       {isPro && !noEnd && compare}
-
-      <UpiPay pass={paying} onClose={() => setPaying(null)} />
     </section>
   );
 }

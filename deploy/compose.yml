@@ -27,8 +27,6 @@ x-api-env: &api-env
   GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
   GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
   GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
-  UPI_VPA: ${UPI_VPA:-}
-  UPI_PAYEE_NAME: ${UPI_PAYEE_NAME:-Signal Radar}
   ADMIN_EMAILS: ${ADMIN_EMAILS:-}
   TELEGRAM_ADMIN_CHAT_ID: ${TELEGRAM_ADMIN_CHAT_ID:-}
   VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
@@ -38,6 +36,12 @@ x-api-env: &api-env
   TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME:-}
   TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET:-}
   YOUTUBE_API_KEY: ${YOUTUBE_API_KEY:-}
+  DODO_PAYMENTS_API_KEY: ${DODO_PAYMENTS_API_KEY:-}
+  DODO_PAYMENTS_WEBHOOK_KEY: ${DODO_PAYMENTS_WEBHOOK_KEY:-}
+  DODO_PAYMENTS_ENVIRONMENT: ${DODO_PAYMENTS_ENVIRONMENT:-test_mode}
+  DODO_PRODUCT_30: ${DODO_PRODUCT_30:-}
+  DODO_PRODUCT_90: ${DODO_PRODUCT_90:-}
+  DODO_PRODUCT_365: ${DODO_PRODUCT_365:-}
   # Read by the shared pipeline code when a user summarizes or searches.
   DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
   ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
@@ -122,9 +126,9 @@ services:
         condition: service_completed_successfully
     networks:
       default:
-        aliases: [signalradar-api]
+        aliases: ["${EDGE_ALIAS:-signalradar}-api"]
       edge:
-        aliases: [signalradar-api]
+        aliases: ["${EDGE_ALIAS:-signalradar}-api"]
     logging: *logging
 
   web:
@@ -145,9 +149,9 @@ services:
       retries: 3
     networks:
       default:
-        aliases: [signalradar-web]
+        aliases: ["${EDGE_ALIAS:-signalradar}-web"]
       edge:
-        aliases: [signalradar-web]
+        aliases: ["${EDGE_ALIAS:-signalradar}-web"]
     logging: *logging
 
   # radar run at RADAR_AT, expiry reminders at REMIND_AT (UTC) plus the nightly backup at BACKUP_AT. Dumps live in the `backups` volume.

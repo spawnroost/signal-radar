@@ -13,10 +13,9 @@
 		Referrer-Policy "strict-origin-when-cross-origin"
 		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(self)"
 		# 'unsafe-inline' scripts: index.html carries two small inline bootstrap scripts (theme, landing swap).
-		# Razorpay Checkout: script from checkout.razorpay.com, iframe from api.razorpay.com (plus its
-		# checkout frame), XHR to api/lumberjack.razorpay.com. Article thumbnails are remote https images.
-		# OAuth (Google/GitHub) and Razorpay callbacks are top-level navigations, which CSP does not limit.
-		Content-Security-Policy "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self' https://api.razorpay.com https://checkout.razorpay.com; script-src 'self' 'unsafe-inline' https://checkout.razorpay.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://api.razorpay.com https://lumberjack.razorpay.com https://lumberjack-cx.razorpay.com https://checkout.razorpay.com; frame-src https://api.razorpay.com https://checkout.razorpay.com; worker-src 'self'; manifest-src 'self'; media-src 'self' https:; upgrade-insecure-requests"
+		# Dodo checkout is a top-level redirect, so it needs no CSP entry. Article thumbnails are remote https images.
+		# OAuth (Google/GitHub) and Dodo return URLs are top-level navigations, which CSP does not limit.
+		Content-Security-Policy "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self'; frame-src 'none'; worker-src 'self'; manifest-src 'self'; media-src 'self' https:; upgrade-insecure-requests"
 		-Server
 	}
 	encode zstd gzip

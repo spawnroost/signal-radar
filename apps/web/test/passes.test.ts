@@ -17,7 +17,7 @@ const NOW = Date.parse('2026-11-09T12:00:00Z');
 describe('pass prices', () => {
   it('shows whole units, and cents when they are not zero', () => {
     expect(formatMoney(9900, 'INR')).toBe('₹99');
-    expect(formatMoney(200, 'USD')).toBe('$2');
+    expect(formatMoney(300, 'USD')).toBe('$3');
     expect(formatMoney(167, 'USD')).toBe('$1.67');
     expect(formatMoney(1500, 'USD')).toBe('$15');
   });
@@ -32,9 +32,9 @@ describe('pass prices', () => {
   it('works out what a longer pass saves against 30-day passes', () => {
     const [p30, p90, p365] = PASSES;
     expect(savingsPercent(p30!, 'INR')).toBe(0);
-    expect(savingsPercent(p90!, 'INR')).toBe(16);
-    expect(savingsPercent(p365!, 'INR')).toBe(34);
-    expect(savingsPercent(p365!, 'USD')).toBe(38);
+    expect(savingsPercent(p90!, 'INR')).toBe(22);
+    expect(savingsPercent(p365!, 'INR')).toBe(45);
+    expect(savingsPercent(p365!, 'USD')).toBe(48);
   });
 
   it('names the pass length', () => {

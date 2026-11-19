@@ -11,6 +11,7 @@ describe('parseRoute', () => {
     expect(parseRoute('/pricing').name).toBe('pricing');
     expect(parseRoute('/signin').name).toBe('signin');
     expect(parseRoute('/admin').name).toBe('admin');
+    expect(parseRoute('/billing/return', '?ref=abc').name).toBe('billing');
   });
 
   it('ignores a trailing slash and falls back to Read for unknown paths', () => {

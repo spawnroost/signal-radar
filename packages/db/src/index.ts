@@ -7,7 +7,8 @@ import * as schema from './schema.js';
 export { schema };
 export * from './schema.js';
 export { createPgStore, extendSubscription, grantPass, type PassGrant, type Tx } from './store.js';
-export * from './upi.js';
+export * from './payments.js';
+export * from './dodo.js';
 
 export type Db = PostgresJsDatabase<typeof schema> & { $client: postgres.Sql };
 

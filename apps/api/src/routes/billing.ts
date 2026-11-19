@@ -64,7 +64,7 @@ function amountFor(pass: (typeof PASSES)[number], currency: Currency): number {
 
 /**
  * Billing endpoints. SHELVED: `/order`, `/verify`, `/webhook` (prepaid Razorpay passes) are not used while
- * payments are direct UPI (see routes/upi.ts). They answer 503 unless Razorpay keys are set, and the production
+ * payments go through Dodo Payments (see routes/dodo.ts). They answer 503 unless Razorpay keys are set, and the production
  * compose file never passes those keys. Kept so Razorpay can be revived. `/passes`, `/checkout` and `/cancel`
  * stay (the stub checkout is dev only and blocked in production).
  */
@@ -93,7 +93,14 @@ export function billingRoutes(deps: RouteDeps) {
         label: formatPrice(pass, currency),
       })),
       enabled: Boolean(razorpayKeys(env)),
-      upi: Boolean(env.UPI_VPA),
+      /** Dodo Payments is set up: hosted checkout is open. */
+      dodo: Boolean(
+        env.DODO_PAYMENTS_API_KEY &&
+        env.DODO_PAYMENTS_WEBHOOK_KEY &&
+        env.DODO_PRODUCT_30 &&
+        env.DODO_PRODUCT_90 &&
+        env.DODO_PRODUCT_365,
+      ),
     });
   });
 

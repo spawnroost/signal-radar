@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { isValidUpiId } from '@radar/core';
 
 export const ApiEnvSchema = z.object({
   BETTER_AUTH_SECRET: z.string().min(16),
@@ -8,9 +7,13 @@ export const ApiEnvSchema = z.object({
   RAZORPAY_KEY_ID: z.string().optional(),
   RAZORPAY_KEY_SECRET: z.string().optional(),
   RAZORPAY_WEBHOOK_SECRET: z.string().optional(),
-  /** Receiving UPI ID (name@bank). Unset = UPI payments closed. */
-  UPI_VPA: z.string().trim().refine(isValidUpiId, 'UPI_VPA must look like name@bank').optional(),
-  UPI_PAYEE_NAME: z.string().trim().min(1).default('Signal Radar'),
+  /** Dodo Payments: API key, webhook signing secret (whsec_...), mode and one product id per pass. Unset = closed. */
+  DODO_PAYMENTS_API_KEY: z.string().optional(),
+  DODO_PAYMENTS_WEBHOOK_KEY: z.string().optional(),
+  DODO_PAYMENTS_ENVIRONMENT: z.enum(['test_mode', 'live_mode']).default('test_mode'),
+  DODO_PRODUCT_30: z.string().optional(),
+  DODO_PRODUCT_90: z.string().optional(),
+  DODO_PRODUCT_365: z.string().optional(),
   /** Comma-separated admin emails, compared trimmed and case-insensitively. */
   ADMIN_EMAILS: z.string().optional(),
   /** Optional override for the admin Telegram chat; default is the admins' linked chats. */

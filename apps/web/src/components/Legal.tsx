@@ -59,13 +59,13 @@ export function Terms() {
 
       <h3 className="sheet-h">Passes and payment</h3>
       <p>
-        Pro is a one-time pass: {PRICE.allPasses}. Prices are in Indian rupees (INR) and you pay by
-        UPI. There is no subscription and no auto-renew.
+        Pro is a one-time pass: {PRICE.allPasses}. Payments are processed by Dodo Payments, which is
+        the merchant of record for each sale: you pay on its secure checkout page, and it handles
+        the payment, tax and receipt. There is no subscription and no auto-renew.
       </p>
       <p>
-        We check each payment by hand. After you pay, you enter the 12-digit UPI reference, and Pro
-        is added once we have matched it to the money received, usually within a few hours. If a
-        payment is rejected, you can send it again with a new reference.
+        Pro is added to your account once Dodo Payments confirms the payment, usually within a few
+        seconds. If a payment does not go through, no pass is added and you can try again.
       </p>
       <p>
         Buying again adds the new days to the end of your current Pro time, or starts from today if
@@ -126,10 +126,10 @@ export function Privacy() {
 
       <h3 className="sheet-h">Payments</h3>
       <p>
-        Passes are paid by UPI, directly to us. You pay in your own UPI app, so your PIN and bank
-        details never reach Signal Radar. We keep the pass you chose, the amount, the 12-digit UPI
-        reference you typed in, and whether we approved or rejected it, so we can add the days and
-        answer refund requests.
+        Passes are paid on a checkout page run by Dodo Payments, the merchant of record. Your card
+        or bank details go to Dodo Payments and never reach Signal Radar. We keep the pass you
+        chose, the amount, the payment reference from Dodo Payments, and whether it succeeded, so we
+        can add the days and answer refund requests.
       </p>
 
       <h3 className="sheet-h">AI summaries</h3>
@@ -172,8 +172,9 @@ export function Refunds() {
         <Link to="contact" className="link">
           Email us
         </Link>{' '}
-        within 7 days of buying a Pro pass and we will refund it in full. Refunds are made by hand
-        and sent to your UPI ID, and your bank may take a few days to show it.
+        within 7 days of buying a Pro pass and we will ask Dodo Payments to refund it in full.
+        Refunds are handled under Dodo Payments' refund policy and go back to the way you paid, and
+        your bank may take a few days to show it.
       </p>
       <p>
         After 7 days, passes are not refundable. This does not affect any rights you have under the
@@ -182,8 +183,8 @@ export function Refunds() {
 
       <h3 className="sheet-h">No auto-renew</h3>
       <p>
-        Passes are one-time UPI payments in INR. Nothing renews itself, so there is no subscription
-        to cancel. When a pass ends, you stay on the free plan.
+        Passes are one-time payments through Dodo Payments. Nothing renews itself, so there is no
+        subscription to cancel. When a pass ends, you stay on the free plan.
       </p>
 
       <h3 className="sheet-h">Contact</h3>
