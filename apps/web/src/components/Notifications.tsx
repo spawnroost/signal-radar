@@ -141,7 +141,13 @@ function TelegramRow({ connected, pro }: { connected: boolean; pro: boolean }) {
       setUrl(res.url);
       startedAt.current = Date.now();
       setWait('waiting');
-      window.open(res.url, '_blank', 'noopener');
+      // On phones open the Telegram app directly: some networks block t.me itself.
+      const m = /^https:\/\/t\.me\/([^?]+)\?start=(.+)$/.exec(res.url);
+      if (m && /Android|iPhone|iPad/i.test(navigator.userAgent)) {
+        window.location.href = `tg://resolve?domain=${m[1]}&start=${m[2]}`;
+      } else {
+        window.open(res.url, '_blank', 'noopener');
+      }
     } catch (e) {
       setError(
         e instanceof ApiError && e.status === 503
