@@ -4,7 +4,10 @@ import { normalizeItem } from './normalize.js';
 import type { Item, RawItem, TopicSource } from './schema.js';
 import { parseGoogleNews } from './search.js';
 import { parseRedditRss } from './sources/reddit.js';
+import { parseFeed } from './sources/rss.js';
 import {
+  bingArticleUrl,
+  bingNewsUrl,
   googleNewsUrl,
   pickSubreddits,
   redditHotUrl,
@@ -18,8 +21,30 @@ const PER_SOURCE_ITEMS = 25;
 const SUBS_PER_REQUEST = 15;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-/** Raw items from one news search. Throws on a network or HTTP failure. */
-export async function fetchNewsSource(query: string, fetchFn: FetchFn): Promise<RawItem[]> {
+/** Bing News items with the publisher's own URL; items whose URL cannot be read are dropped. */
+export function parseBingNews(xml: string): RawItem[] {
+  return parseFeed(xml, { mediaType: 'article', sourceTag: 'News:Source' }).flatMap((it) => {
+    const url = bingArticleUrl(it.url);
+    return url ? [{ ...it, url }] : [];
+  });
+}
+
+/**
+ * Raw items from one news search: Bing News first (real publisher links), Google News when Bing
+ * fails or has nothing. Throws only when Google News fails too.
+ */
+export async function fetchNewsSource(
+  query: string,
+  fetchFn: FetchFn,
+  warn: (m: string) => void = () => {},
+): Promise<RawItem[]> {
+  try {
+    const bing = parseBingNews(await getText(fetchFn, bingNewsUrl(query)));
+    if (bing.length > 0) return bing;
+    warn(`bing news "${query}": no usable items, trying Google News`);
+  } catch (e) {
+    warn(`bing news "${query}": ${(e as Error).message}, trying Google News`);
+  }
   return parseGoogleNews(await getText(fetchFn, googleNewsUrl(query)));
 }
 
@@ -50,7 +75,7 @@ export async function fetchSubreddits(
 export function topicSourceItems(s: TopicSource, raws: RawItem[], now: Date): Item[] {
   const meta =
     s.type === 'news'
-      ? { name: 'Google News', kind: 'rss' as const }
+      ? { name: 'News', kind: 'rss' as const }
       : { name: `r/${s.sub}`, kind: 'reddit' as const };
   return raws.slice(0, PER_SOURCE_ITEMS).flatMap((r) => normalizeItem(r, meta, now) ?? []);
 }
@@ -86,6 +111,7 @@ export async function fetchTopicSources(
       const raws = await fetchNewsSource(
         (s as Extract<TopicSource, { type: 'news' }>).query,
         fetchFn,
+        warn,
       );
       items.set(key, topicSourceItems(s, raws, now));
     } catch (e) {

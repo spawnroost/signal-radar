@@ -98,6 +98,8 @@ export function parseFeedTitle(xml: string): string | null {
 export interface ParseFeedOptions {
   mediaType?: MediaType | undefined;
   tags?: string[] | undefined;
+  /** Element naming the publisher, e.g. Bing News' `News:Source`; becomes the item's sourceName. */
+  sourceTag?: string | undefined;
 }
 
 /** Drops Medium's per-feed `?source=rss…` tag so one post found under two tags is one item. */
@@ -153,6 +155,8 @@ export function parseFeed(xml: string, opts: ParseFeedOptions = {}): RawItem[] {
     if (thumb && item.media) item.media.thumbnail = thumb;
     if (author) item.author = stripHtml(author);
     if (published) item.publishedAt = published;
+    const publisher = opts.sourceTag ? stripHtml(text(e[opts.sourceTag])) : '';
+    if (publisher) item.sourceName = publisher;
     out.push(item);
   }
   return out;

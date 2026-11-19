@@ -49,6 +49,24 @@ export const topicSourcesOf = (n: Niche): TopicSource[] => n.sources ?? [newsSou
 export const googleNewsUrl = (query: string): string =>
   `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`;
 
+export const bingNewsUrl = (query: string): string =>
+  `https://www.bing.com/news/search?q=${encodeURIComponent(query)}&format=rss&setlang=en-US&cc=US`;
+
+/**
+ * The publisher's URL inside a Bing News click-through link
+ * (`bing.com/news/apiclick.aspx?...&url=https%3a%2f%2f...`), or null when there is none.
+ */
+export function bingArticleUrl(link: string): string | null {
+  try {
+    const raw = new URL(link.trim().replace(/&amp;/gi, '&')).searchParams.get('url');
+    if (!raw) return null;
+    const u = new URL(raw);
+    return u.protocol === 'http:' || u.protocol === 'https:' ? u.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
 /** One request for several subreddits: `r/a+b+c`. */
 export const redditHotUrl = (subs: readonly string[], limit = 25): string =>
   `https://www.reddit.com/r/${subs.map(encodeURIComponent).join('+')}/hot/.rss?limit=${limit}`;
@@ -60,9 +78,9 @@ export const redditSearchUrl = (q: string): string =>
 export const topicSourceKey = (s: TopicSource): string =>
   s.type === 'news' ? `news:${s.query.toLowerCase()}` : `reddit:${s.sub.toLowerCase()}`;
 
-/** Quiet label for Customize: "Google News: fashion", "r/fashion". */
+/** Quiet label for Customize: "News: fashion", "r/fashion". */
 export const topicSourceLabel = (s: TopicSource): string =>
-  s.type === 'news' ? `Google News: ${s.query}` : `r/${s.sub}`;
+  s.type === 'news' ? `News: ${s.query}` : `r/${s.sub}`;
 
 /**
  * Subreddits named in Reddit's subreddit search feed, best match first.

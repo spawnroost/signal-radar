@@ -18,7 +18,7 @@ Product metadata: pass_days, app=signal-radar.
 Prices raised 2026-11-18 to cover Dodo fees (~5.5% + ₹13/40c) and tax taken from tax-inclusive prices.
 The app copy (apps/web/src/lib/tiers.ts, passes.ts) still shows the old prices: update in the build.
 
-Live-mode products: not created yet. Create the same three when going live; ids will differ.
+Live-mode products (created 2026-11-19): 30 days pdt_0NsHXU4cvF1v4e2pKSEZ5, 90 days pdt_0NsHXU7vefyQ6nL4RCZY6, 1 year pdt_0NsHXUB6rV2BegT8jTcJf.
 
 ## Server env (keep out of the repo)
 
